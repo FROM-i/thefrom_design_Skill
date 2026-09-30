@@ -1,7 +1,7 @@
 # THE FROM_DESIGN_SKILL
 더프롬 철학을 기반으로 한 UI/UX 디자인 스킬
 
-> 한눈에 보기: [`docs/intro.html`](docs/intro.html) — 스킬 소개·설치 인포그래픽 모션 (브라우저로 열기)
+> 한눈에 보기: [`docs/intro.html`](docs/intro.html) — 「나로부터」 더프롬의 철학이 어떤 방법론과 추론을 거쳐 무엇을 도출하는지 (2분 27초 모션, 브라우저로 열기)
 
 ## thefrom-method
 

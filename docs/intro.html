@@ -1,429 +1,532 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>thefrom-ux 소개</title>
+<title>나로부터 — thefrom-ux</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;700;900&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&family=Noto+Serif+KR:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 </head><body style="margin:0">
 <style>
-/* 레이아웃: 16:9 무대 하나(폰에서는 4:5)에 장면 11개를 순서대로 재생 — 스토리형 진행 막대 + 장면 칩 */
-/* 더프롬 자사 산출물이므로 더프롬 팔레트를 쓴다(L0 §3). 노랑은 C 게이트 신호에만. */
+/* 필름: 1920×1080 무대 하나를 화면에 맞춰 축소. 모든 움직임은 시간 t의 함수 — 같은 t면 같은 프레임(영상 렌더용). */
+/* 더프롬 자사 산출물: 검정 무대 · 흰 글 · 노랑은 "빛/출구", 초록·빨강·파랑은 신호. */
 :root{
-  --paper:#F3F4F1; --ink:#121212; --sub:#5C5F5B; --line:#D9DBD6; --card:#FFFFFF;
-  --green:#338F74; --red:#E85E53; --blue:#595EA6; --yellow:#FFD200;
-  --f-disp:"Noto Sans KR","Apple SD Gothic Neo",system-ui,sans-serif;
-  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
-  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
-  color-scheme:light;
+  --void:#0B0B0B; --ink:#F2F2EF; --dim:#8C8C88; --faint:#2A2A28; --line:#3A3A37;
+  --y:#FFD200; --g:#338F74; --r:#E85E53; --b:#595EA6;
+  --sans:"Noto Sans KR","Noto Sans CJK KR","Apple SD Gothic Neo",system-ui,sans-serif;
+  --serif:"Noto Serif KR","Noto Serif CJK KR","AppleMyungjo",serif;
+  --mono:"IBM Plex Mono","DejaVu Sans Mono",ui-monospace,monospace;
+  color-scheme:dark;
 }
-html,body{background:var(--paper);color:var(--ink)}
-body{font-family:var(--f-body)}
-.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:24px 40px;display:flex;flex-direction:column;gap:14px}
+html,body{background:#050505;color:var(--ink);height:100%}
+body{font-family:var(--sans)}
+.wrap{max-width:1400px;margin:0 auto;padding-inline:16px;padding-block:20px 32px;display:flex;flex-direction:column;gap:12px}
+.view{position:relative;width:100%;aspect-ratio:16/9;background:var(--void);overflow:hidden;border-radius:10px}
+.stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;background:var(--void);overflow:hidden}
+.sc{position:absolute;inset:0;opacity:0;visibility:hidden}
+[data-fx]{opacity:0;will-change:transform,opacity}
 
-/* 무대 */
-.stage{position:relative;width:100%;aspect-ratio:16/9;background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden;container-type:inline-size}
-@media (max-width:700px){.stage{aspect-ratio:3/5}}
-.scene{position:absolute;inset:0;padding:5.5cqw 6cqw 7cqw;display:none;flex-direction:column;gap:2.2cqw}
-.scene.on{display:flex}
-.eyebrow{font-family:var(--f-mono);font-size:max(11px,1.25cqw);letter-spacing:.08em;color:var(--sub);text-transform:uppercase}
-.h1{font-family:var(--f-disp);font-weight:900;font-size:8.2cqw;line-height:1.02;letter-spacing:-.02em;margin:0}
-.h2{font-family:var(--f-disp);font-weight:900;font-size:4.4cqw;line-height:1.18;letter-spacing:-.015em;margin:0;text-wrap:balance}
-.lead{font-size:max(13px,1.9cqw);line-height:1.55;color:var(--sub);margin:0;max-width:60ch}
-.cap{font-size:max(12px,1.55cqw);line-height:1.5;color:var(--sub);margin:0}
-.mono{font-family:var(--f-mono)}
-.row{display:flex;gap:2.4cqw;align-items:stretch}
-.grow{flex:1;min-width:0}
-@container (max-width:700px){
-  .scene{padding:7cqw 6.5cqw 12cqw;gap:3.4cqw}
-  .h1{font-size:13cqw}.h2{font-size:7.2cqw}
-  .lead{font-size:max(13px,3.6cqw)}.cap{font-size:max(12px,3.1cqw)}
-  .row{flex-direction:column;gap:3.4cqw}
-  .eyebrow{font-size:max(11px,2.6cqw)}
-}
-
-/* 공통 등장 모션 — 장면이 .play 일 때만 재생, 쉴 때도 보이는 상태로 끝난다 */
-.in{opacity:1}
-.play .in{animation:up .7s cubic-bezier(.2,.8,.2,1) var(--d,0s) both}
-@keyframes up{from{opacity:0;transform:translateY(1.4cqw)}to{opacity:1;transform:none}}
-.play .pop{animation:pop .5s cubic-bezier(.3,1.4,.5,1) var(--d,0s) both}
-@keyframes pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
-
-/* 1: 1U 막대 */
-.unit{display:flex;flex-direction:column;gap:.35cqw;align-items:flex-start;margin-top:auto}
-.unit i{display:block;height:3.2cqw;background:var(--ink);transform-origin:left}
-.unit i:nth-child(1){width:9.6cqw}.unit i:nth-child(2){width:6.4cqw}.unit i:nth-child(3){width:3.2cqw;background:var(--green)}
-.play .unit i{animation:bar .8s cubic-bezier(.2,.8,.2,1) var(--d) both}
-@keyframes bar{from{transform:scaleX(0)}to{transform:none}}
-.intro-foot{display:flex;justify-content:space-between;align-items:flex-end;gap:3cqw;margin-top:auto}
-
-/* 2: 지킬 것 / 밀 것 */
-.col{background:var(--card);border:1px solid var(--line);border-radius:1.4cqw;padding:2.2cqw;display:flex;flex-direction:column;gap:1.2cqw}
-.col h3{margin:0;font-family:var(--f-disp);font-size:max(14px,2.1cqw)}
-.chips{display:flex;flex-wrap:wrap;gap:.9cqw}
-.chip{font-size:max(12px,1.6cqw);padding:.7cqw 1.4cqw;border-radius:99px;border:1px solid var(--ink);background:var(--card)}
-.chip.push{border-color:var(--green);color:var(--green)}
-.play .chip.push{animation:up .6s var(--d) both,sway 2.6s ease-in-out calc(var(--d) + .6s) infinite}
-@keyframes sway{50%{transform:translateY(-.5cqw) rotate(-2deg)}}
-
-/* 3: 입력 → 출력 */
-.flow3{display:grid;grid-template-columns:1fr auto 1.1fr auto 1.4fr;align-items:center;gap:2cqw;flex:1}
-.doc{background:var(--card);border:1px solid var(--line);border-radius:1cqw;padding:2cqw;display:flex;flex-direction:column;gap:.8cqw}
-.doc b{font-size:max(13px,1.9cqw)}
-.doc span{height:.8cqw;background:var(--line);border-radius:1cqw}
-.box{background:var(--ink);color:var(--paper);border-radius:1.4cqw;padding:2.4cqw 2.2cqw;text-align:center;font-family:var(--f-mono);font-size:max(13px,2cqw)}
-.arrow{font-family:var(--f-mono);font-size:max(14px,2.6cqw);color:var(--green)}
-.outs{display:flex;flex-direction:column;gap:1.1cqw}
-.out{display:flex;gap:1.2cqw;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:1cqw;padding:1.2cqw 1.6cqw;font-size:max(12px,1.7cqw)}
-.out .ic{width:3cqw;height:3cqw;border-radius:.6cqw;flex:none}
-@container (max-width:700px){.flow3{grid-template-columns:1fr;justify-items:stretch}.arrow{transform:rotate(90deg);justify-self:center}.out .ic{width:5cqw;height:5cqw}}
-
-/* 4: 흐름 */
-.track{position:relative;display:flex;justify-content:space-between;align-items:flex-start;margin-top:3cqw}
-.track::before{content:"";position:absolute;left:3cqw;right:3cqw;top:2.4cqw;height:2px;background:var(--line)}
-.node{position:relative;display:flex;flex-direction:column;align-items:center;gap:1cqw;width:10cqw;text-align:center}
-.node .dot{width:4.8cqw;height:4.8cqw;border-radius:50%;background:var(--card);border:2px solid var(--ink);display:grid;place-items:center;font-family:var(--f-mono);font-size:max(10px,1.3cqw);font-weight:500}
-.node.gate .dot{border-radius:.4cqw;transform:rotate(45deg);background:var(--yellow);border-color:var(--ink);width:4.2cqw;height:4.2cqw}
-.node.gate .dot b{transform:rotate(-45deg)}
-.node small{font-size:max(11px,1.45cqw);color:var(--sub);line-height:1.35}
-.node strong{font-size:max(12px,1.7cqw)}
-.runner{position:absolute;top:1.6cqw;left:3cqw;width:1.6cqw;height:1.6cqw;border-radius:50%;background:var(--green);z-index:2}
-.play .runner{animation:run 5.6s cubic-bezier(.5,0,.5,1) .4s both}
-@keyframes run{0%{left:3cqw}40%{left:calc(50% - .8cqw)}58%{left:calc(50% - .8cqw)}100%{left:calc(100% - 4.6cqw)}}
-.play .node.gate .dot{animation:pulse 1.2s ease-in-out 2.4s 2}
-@keyframes pulse{50%{box-shadow:0 0 0 1.4cqw rgba(255,210,0,.35)}}
-.gatenote{align-self:center;background:var(--ink);color:var(--paper);border-radius:99px;padding:1cqw 2.2cqw;font-size:max(12px,1.7cqw)}
-.gatenote b{color:var(--yellow)}
-@container (max-width:700px){
-  .track{flex-direction:column;gap:2.2cqw;margin-top:1cqw}
-  .track::before{left:5.6cqw;right:auto;top:3cqw;bottom:3cqw;width:2px;height:auto}
-  .node{flex-direction:row;width:auto;text-align:left;gap:3cqw}
-  .node .dot{width:9cqw;height:9cqw;font-size:max(10px,2.6cqw);flex:none}
-  .node.gate .dot{width:7cqw;height:7cqw;margin-inline:1cqw}
-  .track{gap:1.6cqw}
-  .track::before{left:4.6cqw}
-  .node small{font-size:max(11px,3cqw)}.node strong{font-size:max(13px,3.6cqw)}
-  .runner{display:none}
-}
-
-/* 5: A / B */
-.ab{display:grid;grid-template-columns:1fr 1fr;gap:3cqw;min-height:0}
-.phone{position:relative;background:var(--card);border:1px solid var(--line);border-radius:2cqw;padding:2cqw;display:flex;flex-direction:column;gap:1.2cqw;min-height:0}
-.phone .lbl{font-family:var(--f-mono);font-size:max(11px,1.35cqw);color:var(--sub)}
-.tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:.8cqw}
-.tiles i{aspect-ratio:1;background:#E7E8E4;border-radius:.3cqw;display:grid;place-items:center;font-style:normal;font-family:var(--f-mono);font-size:max(11px,1.8cqw);color:#8B8E88}
-.sent{font-family:var(--f-disp);font-weight:900;font-size:max(15px,2.5cqw);line-height:1.2}
-.bars{display:flex;flex-direction:column;gap:1.1cqw}
-.bars div{position:relative;height:.4cqw;background:var(--line);border-radius:1cqw}
-.bars div::after{content:"";position:absolute;top:50%;width:1.6cqw;height:1.6cqw;margin:-.8cqw 0 0 -.8cqw;border-radius:50%;background:var(--green);left:var(--x)}
-.play .bars div::after{animation:slide 1.4s cubic-bezier(.2,.8,.2,1) var(--d) both}
-@keyframes slide{from{left:50%;opacity:0}to{left:var(--x);opacity:1}}
-.stamp{position:absolute;right:1.6cqw;top:1.4cqw;border:3px solid currentColor;border-radius:.6cqw;padding:.4cqw 1.2cqw;font-family:var(--f-disp);font-weight:900;font-size:max(13px,2.2cqw);transform:rotate(-8deg);background:var(--card)}
-.stamp.bad{color:var(--red)}.stamp.good{color:var(--green);transform:rotate(6deg)}
-.play .stamp{animation:stampin .45s cubic-bezier(.3,1.5,.6,1) var(--d) both}
-@keyframes stampin{from{opacity:0;transform:scale(2.2) rotate(-8deg)}}
-.phone p{margin:0}
-@container (max-width:700px){.ab{grid-template-columns:1fr;gap:3cqw}.phone{padding:3cqw;gap:2cqw}.ab .cap{font-size:max(11px,2.8cqw)}}
-
-/* 6: 효익 시각화 */
-.chain{display:grid;grid-template-columns:repeat(4,1fr);gap:1.6cqw}
-.step{background:var(--card);border:1px solid var(--line);border-radius:1.2cqw;padding:1.8cqw;display:flex;flex-direction:column;gap:.8cqw}
-.step .k{font-family:var(--f-mono);font-size:max(11px,1.3cqw);color:var(--green)}
-.step b{font-size:max(13px,1.9cqw);line-height:1.35}
-.demo{display:flex;align-items:center;gap:3cqw;background:var(--card);border:1px solid var(--line);border-radius:1.4cqw;padding:2cqw 2.6cqw}
-.demo .bars{flex:1}
-.ring{width:7cqw;height:7cqw;flex:none}
-.ring circle{fill:none;stroke-width:6}
-.ring .bg{stroke:var(--line)}.ring .fg{stroke:var(--green);stroke-dasharray:188.5;stroke-dashoffset:0;transform:rotate(-90deg);transform-origin:50% 50%}
-.play .ring .fg{animation:timer 3s linear 1.6s both}
-@keyframes timer{from{stroke-dashoffset:188.5}to{stroke-dashoffset:0}}
-.ring text{font-family:var(--f-mono);font-size:20px;fill:var(--ink)}
-@container (max-width:700px){.chain{grid-template-columns:1fr 1fr}.ring{width:15cqw;height:15cqw}}
-
-/* 7: 역할 */
-.roles{display:grid;grid-template-columns:repeat(3,1fr);gap:2cqw;flex:1}
-.role{background:var(--card);border:1px solid var(--line);border-radius:1.4cqw;padding:2.4cqw;display:flex;flex-direction:column;gap:1.2cqw}
-.role .sh{width:6cqw;height:6cqw}
-.role h3{margin:0;font-family:var(--f-disp);font-size:max(15px,2.4cqw)}
-.role p{margin:0;font-size:max(12px,1.65cqw);line-height:1.5;color:var(--sub)}
-.role .no{color:var(--red);font-weight:600}
-@container (max-width:700px){.roles{grid-template-columns:1fr}.role{flex-direction:row;align-items:flex-start;gap:3cqw}.role .sh{width:10cqw;height:10cqw;flex:none}}
-
-/* 8: 게이트 */
-.gates{display:grid;grid-template-columns:repeat(7,1fr);gap:1.2cqw}
-.g{border:1.5px solid var(--ink);border-radius:1cqw;padding:1.6cqw 1cqw;display:flex;flex-direction:column;gap:.8cqw;align-items:flex-start;background:var(--card)}
-.g .mono{font-size:max(12px,1.9cqw);font-weight:500}
-.g span{font-size:max(11px,1.45cqw);line-height:1.35}
-.g.who{border-color:var(--blue)}.g.who .mono{color:var(--blue)}
-.play .g{animation:light .5s ease var(--d) both}
-@keyframes light{from{opacity:.15;transform:translateY(1cqw)}}
-.legend{display:flex;gap:3cqw;flex-wrap:wrap}
-.legend span{display:flex;align-items:center;gap:1cqw;font-size:max(12px,1.6cqw)}
-.legend i{width:2.2cqw;height:2.2cqw;border-radius:.4cqw;border:1.5px solid var(--ink)}
-.legend i.b{border-color:var(--blue)}
-@container (max-width:700px){.gates{grid-template-columns:repeat(2,1fr)}.g{flex-direction:row;align-items:center;gap:2.4cqw}}
-
-/* 9~11: 사용법 */
-.steps{display:flex;flex-direction:column;gap:1.4cqw}
-.st{display:flex;gap:2cqw;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:1.2cqw;padding:1.6cqw 2cqw}
-.st .n{font-family:var(--f-mono);width:4cqw;height:4cqw;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-size:max(12px,1.7cqw);flex:none}
-.st p{margin:0;font-size:max(13px,1.9cqw);line-height:1.4}
-.code{font-family:var(--f-mono);background:#E9EAE6;border-radius:.5cqw;padding:.2cqw .8cqw;font-size:.92em}
-.term{background:var(--ink);color:#EDEDEA;border-radius:1.4cqw;padding:2.4cqw 2.6cqw;font-family:var(--f-mono);font-size:max(12px,1.85cqw);line-height:1.7;min-height:14cqw;white-space:pre-wrap}
-.term .p{color:var(--green)}
-.caret{display:inline-block;width:.6em;height:1.1em;background:var(--yellow);vertical-align:-.15em;animation:blink 1s steps(1) infinite}
-@keyframes blink{50%{opacity:0}}
-.ai2{display:grid;grid-template-columns:1fr 1fr;gap:2cqw}
-.ai2 .col h3{display:flex;align-items:center;gap:1cqw}
-.ai2 ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:.8cqw;font-size:max(12px,1.7cqw);line-height:1.45}
-.files{display:flex;flex-wrap:wrap;gap:.6cqw}
-.files span{font-family:var(--f-mono);font-size:max(10px,1.25cqw);border:1px solid var(--line);border-radius:.4cqw;padding:.3cqw .7cqw;background:var(--paper)}
-.play .files span{animation:pop .4s cubic-bezier(.3,1.4,.5,1) calc(var(--d) + var(--i) * .08s) both}
-@container (max-width:700px){.ai2{grid-template-columns:1fr}.st .n{width:8cqw;height:8cqw}.term{font-size:max(12px,3.2cqw)}}
-.outro{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;gap:2cqw;flex-wrap:wrap}
+/* 타이포 */
+.chap{position:absolute;left:96px;top:72px;font-family:var(--mono);font-size:22px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
+.chap b{color:var(--ink);font-weight:500}
+.hl{font-family:var(--sans);font-weight:900;letter-spacing:-.025em;line-height:1.06}
+.q{font-family:var(--serif);font-weight:400;line-height:1.35;letter-spacing:-.01em}
+.mono{font-family:var(--mono)}
+.dim{color:var(--dim)}
+.y{color:var(--y)}.g{color:var(--g)}.r{color:var(--r)}.bl{color:var(--b)}
+.abs{position:absolute}
 
 /* 컨트롤 */
-.bar{display:flex;gap:4px}
-.bar button{flex:1;height:6px;border:0;padding:0;border-radius:3px;background:var(--line);cursor:pointer;position:relative;overflow:hidden}
-.bar button i{position:absolute;inset:0;background:var(--ink);transform-origin:left;transform:scaleX(0)}
-.bar button.done i{transform:none}
-.bar button:focus-visible{outline:2px solid var(--green);outline-offset:3px}
-.ctrl{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.ctrl button{font:inherit;font-size:14px;border:1px solid var(--ink);background:var(--card);color:var(--ink);border-radius:99px;padding:7px 16px;cursor:pointer;min-height:40px}
-.ctrl button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
-.ctrl .now{margin-left:auto;font-size:14px;color:var(--sub)}
-.ctrl .now b{color:var(--ink);font-weight:600}
-@media (prefers-reduced-motion:reduce){.play .in,.play .pop,.play .chip.push,.play .unit i,.play .runner,.play .bars div::after,.play .stamp,.play .ring .fg,.play .g,.play .files span,.play .node.gate .dot{animation:none!important}.runner{display:none}.caret{animation:none}}
+.ctrl{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ctrl button{font:inherit;font-size:14px;border:1px solid #555;background:#141414;color:var(--ink);border-radius:99px;padding:8px 16px;min-height:40px;cursor:pointer}
+.ctrl button:focus-visible,.scrub:focus-visible{outline:2px solid var(--y);outline-offset:2px}
+.scrubwrap{flex:1;min-width:200px;display:flex;flex-direction:column;gap:6px}
+.scrub{width:100%;accent-color:var(--y)}
+.chaps{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.06em}
+.chaps button{border:0;background:none;color:inherit;font:inherit;padding:0;cursor:pointer;min-height:0}
+.chaps button:hover{color:var(--ink)}
+.time{font-family:var(--mono);font-size:13px;color:var(--dim);font-variant-numeric:tabular-nums;min-width:96px;text-align:right}
+body.render .wrap{padding:0;max-width:none}
+body.render .ctrl{display:none}
+body.render .view{border-radius:0;width:1920px;height:1080px;aspect-ratio:auto}
 </style>
 
 <div class="wrap">
-  <div class="stage" id="stage" aria-roledescription="모션 소개" aria-live="polite">
+<div class="view" id="view"><div class="stage" id="stage">
 
-    <!-- 1 인트로 -->
-    <section class="scene on play" data-t="인트로" data-dur="6000">
-      <div class="eyebrow in">THE FROM · 디자인 스킬</div>
-      <h1 class="h1 in" style="--d:.15s">thefrom-ux</h1>
-      <p class="h2 in" style="--d:.35s">익숙한 것을,<br>처음 보는 것처럼.</p>
-      <div class="intro-foot">
-        <p class="lead in" style="--d:.6s">더프롬의 디자인 방법론을 AI가 그대로 따라 하도록 만든 스킬입니다. 브리프 한 장을 주면, 방법론대로 생각하고 실제로 눌러볼 수 있는 화면을 만듭니다.</p>
-        <div class="unit" aria-label="1U 단위 — 3U·2U·1U"><i style="--d:.3s"></i><i style="--d:.5s"></i><i style="--d:.7s"></i></div>
-      </div>
-    </section>
-
-    <!-- 2 한 문장 -->
-    <section class="scene" data-t="한 문장" data-dur="6500">
-      <div class="eyebrow in">핵심은 한 문장</div>
-      <p class="h2 in" style="--d:.1s">관성은 <u>구조</u>에서 지키고,<br>새로움은 <span style="color:var(--green)">해석</span>에서 만든다.</p>
-      <div class="row" style="margin-top:auto">
-        <div class="col grow in" style="--d:.5s">
-          <h3>지킬 것 — 사용자가 쓰던 방식</h3>
-          <div class="chips"><span class="chip">뒤로 가기</span><span class="chip">버튼은 버튼처럼</span><span class="chip">읽기 순서</span><span class="chip">접근성</span></div>
-        </div>
-        <div class="col grow in" style="--d:.8s">
-          <h3 style="color:var(--green)">밀 것 — 보는 관점</h3>
-          <div class="chips"><span class="chip push" style="--d:1s">메타포</span><span class="chip push" style="--d:1.15s">톤</span><span class="chip push" style="--d:1.3s">모션의 성격</span><span class="chip push" style="--d:1.45s">효익이 보이는 시각화</span></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 3 무엇을 주나 -->
-    <section class="scene" data-t="무엇을 주나" data-dur="6500">
-      <div class="eyebrow in">무엇을 넣고, 무엇을 받나</div>
-      <p class="h2 in" style="--d:.1s">브리프 한 장이 들어가면,<br>눌러볼 수 있는 화면이 나옵니다.</p>
-      <div class="flow3">
-        <div class="doc in" style="--d:.4s"><b>브리프</b><span style="width:90%"></span><span style="width:70%"></span><span style="width:80%"></span><p class="cap">무엇을 · 누구에게 · 브랜드 · 제약</p></div>
-        <div class="arrow in" style="--d:.7s">→</div>
-        <div class="box pop" style="--d:.9s">thefrom-ux</div>
-        <div class="arrow in" style="--d:1.2s">→</div>
-        <div class="outs">
-          <div class="out in" style="--d:1.4s"><span class="ic" style="background:var(--green)"></span>375px 인터랙티브 프로토타입</div>
-          <div class="out in" style="--d:1.6s"><span class="ic" style="background:var(--ink)"></span>S0~S5 과정 문서 — 왜 이렇게 했는지</div>
-          <div class="out in" style="--d:1.8s"><span class="ic" style="background:var(--blue)"></span>판정 키트 — 사람이 판단할 재료</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 4 흐름 -->
-    <section class="scene" data-t="흐름" data-dur="7500">
-      <div class="eyebrow in">일곱 단계</div>
-      <p class="h2 in" style="--d:.1s">비싼 단계는 <span style="background:var(--yellow);padding:0 .15em;white-space:nowrap">판정 뒤에</span> 둡니다.</p>
-      <div class="track">
-        <div class="runner" aria-hidden="true"></div>
-        <div class="node in" style="--d:.3s"><div class="dot">S0</div><div><strong>정의</strong><br><small>컨셉 한 문장</small></div></div>
-        <div class="node in" style="--d:.45s"><div class="dot">S1</div><div><strong>여행</strong><br><small>사조의 원리를 빌린다</small></div></div>
-        <div class="node in" style="--d:.6s"><div class="dot">S2</div><div><strong>터널</strong><br><small>재해석·효익 시각화</small></div></div>
-        <div class="node gate in" style="--d:.75s"><div class="dot"><b>C</b></div><div><strong>컨셉 판정</strong><br><small>러프 1장으로 사람이 go</small></div></div>
-        <div class="node in" style="--d:.9s"><div class="dot">S3</div><div><strong>1U</strong><br><small>치수를 한 단위에서</small></div></div>
-        <div class="node in" style="--d:1.05s"><div class="dot">S4</div><div><strong>출구</strong><br><small>게이트 G1~G7</small></div></div>
-        <div class="node in" style="--d:1.2s"><div class="dot">S5</div><div><strong>실체화</strong><br><small>상태·디테일·핸드오프</small></div></div>
-      </div>
-      <div class="gatenote in" style="--d:2.4s;margin-top:auto">◆ <b>C 게이트</b>에서 멈추고 묻습니다 — go · 수정 · 중단</div>
-    </section>
-
-    <!-- 5 A/B -->
-    <section class="scene" data-t="A / B" data-dur="8000">
-      <div class="eyebrow in">시안은 늘 두 갈래</div>
-      <p class="h2 in" style="--d:.1s">방법론을 <u>형태</u>에 두면 개살구,<br><span style="color:var(--green)">컴포넌트 안</span>에 두면 효익.</p>
-      <div class="ab">
-        <div class="phone in" style="--d:.4s">
-          <span class="lbl">A · 시스템 주도 (대조군)</span>
-          <div class="tiles"><i>78</i><i>54</i><i>66</i><i>71</i><i>—</i><i>—</i></div>
-          <p class="cap">1U·그리드가 모든 형태를 정한다 → 단조롭고, 명분만 있고 사용자가 얻는 게 없다</p>
-          <span class="stamp bad" style="--d:2.2s">개살구</span>
-        </div>
-        <div class="phone in" style="--d:.7s">
-          <span class="lbl">B · 경험 주도 (본안)</span>
-          <div class="sent">혼자 있는 시간에 충전하고,<br>그때의 판단을 믿는 사람</div>
-          <div class="bars"><div style="--x:12%;--d:1.2s"></div><div style="--x:72%;--d:1.4s"></div><div style="--x:90%;--d:1.6s"></div></div>
-          <p class="cap">컴포넌트는 자유롭게 쓰고, 방법론은 구조·포인트·디테일에 녹인다</p>
-          <span class="stamp good" style="--d:2.8s">효익 ✓</span>
-        </div>
-      </div>
-      <p class="cap in" style="--d:3s">결정마다 <b>명분</b>과 <b>효익</b>을 나란히 적습니다. 효익 칸이 빈 결정은 버립니다.</p>
-    </section>
-
-    <!-- 6 효익 시각화 -->
-    <section class="scene" data-t="효익 시각화" data-dur="7500">
-      <div class="eyebrow in">컨셉이 아니라 효익이 보이게</div>
-      <p class="h2 in" style="--d:.1s">메타포는 톤만 정하고,<br>화면의 형식은 사용자의 일이 정합니다.</p>
-      <div class="chain">
-        <div class="step in" style="--d:.4s"><span class="k">① 과업</span><b>내가 어떤 사람인지 이해한다</b></div>
-        <div class="step in" style="--d:.6s"><span class="k">② 보이게 할 것</span><b>네 영역 위의 내 위치</b></div>
-        <div class="step in" style="--d:.8s"><span class="k">③ 형식</span><b class="mono">VIZ-POS</b></div>
-        <div class="step in" style="--d:1s"><span class="k">④ 효익 지표</span><b>설명 없이 3초 안에 안다</b></div>
-      </div>
-      <div class="demo in" style="--d:1.2s;margin-top:auto">
-        <div class="bars"><div style="--x:14%;--d:1.6s"></div><div style="--x:64%;--d:1.8s"></div><div style="--x:88%;--d:2s"></div><div style="--x:22%;--d:2.2s"></div></div>
-        <svg class="ring" viewBox="0 0 70 70" aria-label="3초"><circle class="bg" cx="35" cy="35" r="30"/><circle class="fg" cx="35" cy="35" r="30"/><text x="35" y="42" text-anchor="middle">3s</text></svg>
-      </div>
-    </section>
-
-    <!-- 7 역할 -->
-    <section class="scene" data-t="역할" data-dur="7000">
-      <div class="eyebrow in">누가 무엇을 하나</div>
-      <p class="h2 in" style="--d:.1s">AI는 만들고, 찾고, 준비합니다.<br>판단은 사람이 합니다.</p>
-      <div class="roles">
-        <div class="role in" style="--d:.4s"><svg class="sh" viewBox="0 0 40 40"><rect x="4" y="4" width="32" height="32" fill="var(--green)"/></svg><div><h3>연산 — AI</h3><p>컨셉 초안, 재해석, 시안, 1U 파생, 자기 비평. 만들고 근거를 적습니다.</p></div></div>
-        <div class="role in" style="--d:.7s"><svg class="sh" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="var(--ink)" stroke-width="4"/></svg><div><h3>증거 — 검색·질문</h3><p>경쟁 사례와 레퍼런스는 찾거나 묻습니다. <span class="no">지어내지 않습니다.</span> 없으면 "없음".</p></div></div>
-        <div class="role in" style="--d:1s"><svg class="sh" viewBox="0 0 40 40"><polygon points="20,3 37,20 20,37 3,20" fill="var(--blue)"/></svg><div><h3>판정 — 사람</h3><p>컨셉 go, 메타포, 첫 반응, 완성도. AI는 판정 키트만 준비합니다.</p></div></div>
-      </div>
-    </section>
-
-    <!-- 8 게이트 -->
-    <section class="scene" data-t="게이트" data-dur="7500">
-      <div class="eyebrow in">출구는 일곱 조건이 동시에</div>
-      <p class="h2 in" style="--d:.1s">하나라도 못 넘으면<br>터널로 돌아갑니다.</p>
-      <div class="gates">
-        <div class="g" style="--d:.5s"><span class="mono">G1</span><span>기성을 따라 하지 않았다</span></div>
-        <div class="g who" style="--d:.7s"><span class="mono">G2</span><span>우리만의 색이 있다</span></div>
-        <div class="g" style="--d:.9s"><span class="mono">G3</span><span>쓰던 방식을 해치지 않는다</span></div>
-        <div class="g" style="--d:1.1s"><span class="mono">G4</span><span>익숙한 패턴에 새 해석 + 효익</span></div>
-        <div class="g who" style="--d:1.3s"><span class="mono">G5</span><span>처음 본 사람이 "어, 이거"</span></div>
-        <div class="g who" style="--d:1.5s"><span class="mono">G6</span><span>작동과 비주얼 모두에 컨셉</span></div>
-        <div class="g who" style="--d:1.7s"><span class="mono">G7</span><span>포트폴리오에 올릴 완성도</span></div>
-      </div>
-      <div class="legend in" style="--d:2s;margin-top:auto"><span><i></i>AI가 예비 판정 → 사람이 확정</span><span><i class="b"></i>사람이 최종 판정</span></div>
-    </section>
-
-    <!-- 9 설치 Claude -->
-    <section class="scene" data-t="설치 · Claude" data-dur="7000">
-      <div class="eyebrow in">매뉴얼 1 · Claude에 설치</div>
-      <p class="h2 in" style="--d:.1s">세 번 누르면 끝.</p>
-      <div class="steps">
-        <div class="st in" style="--d:.4s"><span class="n">1</span><p>Claude 데스크톱 앱 → <b>Customize → Plugins</b></p></div>
-        <div class="st in" style="--d:.7s"><span class="n">2</span><p><b>Add marketplace</b> → <span class="code">FROM-i/thefrom_design_Skill</span></p></div>
-        <div class="st in" style="--d:1s"><span class="n">3</span><p><b>thefrom-ux</b> 설치 → <b>Sync automatically</b> 켜기 (수정본 자동 반영)</p></div>
-      </div>
-      <p class="cap in" style="--d:1.3s;margin-top:auto">한 번 설치하면 채팅·Cowork·Claude Code 어디서나 씁니다.</p>
-    </section>
-
-    <!-- 10 GPT·Gemini -->
-    <section class="scene" data-t="설치 · GPT·Gemini" data-dur="8000">
-      <div class="eyebrow in">매뉴얼 2 · 다른 AI에서</div>
-      <p class="h2 in" style="--d:.1s">지침 한 장 + 파일 여덟 개.</p>
-      <div class="ai2">
-        <div class="col in" style="--d:.4s"><h3>ChatGPT · 맞춤 GPT</h3>
-          <ol><li><b>지침</b>에 <span class="code">instructions.md</span> 붙여넣기</li><li><b>지식</b>에 파일 8개 업로드</li><li><b>웹 검색</b>·<b>캔버스</b> 켜기</li></ol></div>
-        <div class="col in" style="--d:.7s"><h3>Gemini · Gem</h3>
-          <ol><li><b>요청 사항</b>에 <span class="code">instructions.md</span> 붙여넣기</li><li><b>지식</b>에 파일 8개 (Drive면 자동 갱신)</li><li>공유로 팀에 전달</li></ol></div>
-      </div>
-      <div class="files" style="--d:1s;margin-top:auto">
-        <span style="--i:0">core.md</span><span style="--i:1">pipeline.md</span><span style="--i:2">qna.md</span><span style="--i:3">catalog-ism.md</span><span style="--i:4">catalog-form.md</span><span style="--i:5">catalog-pattern.md</span><span style="--i:6">proto-base.html</span><span style="--i:7">brief-template.md</span>
-      </div>
-      <p class="cap in" style="--d:1.2s">모두 저장소의 <span class="code">portable/</span> 폴더에 있습니다.</p>
-    </section>
-
-    <!-- 11 첫 요청 -->
-    <section class="scene" data-t="첫 요청" data-dur="9000">
-      <div class="eyebrow in">매뉴얼 3 · 이렇게 시작하세요</div>
-      <div class="term in" style="--d:.2s" id="term" aria-label="첫 요청 예시"></div>
-      <div class="outro">
-        <p class="h2 in" style="--d:.4s">시작은 브리프 한 장.</p>
-        <div class="unit" aria-hidden="true"><i style="--d:.5s"></i><i style="--d:.7s"></i><i style="--d:.9s"></i></div>
-      </div>
-    </section>
+<!-- ───────── 0 · OPEN ───────── -->
+<section class="sc" data-s="0" data-e="8">
+  <div class="abs" id="sq" style="left:912px;top:492px;width:96px;height:96px;background:var(--ink)"></div>
+  <div class="abs" id="bars" style="left:776px;top:420px;display:flex;flex-direction:column;gap:9px">
+    <i style="display:block;width:288px;height:96px;background:var(--ink);transform-origin:left" data-fx="grow" data-at="4.2" data-dur=".9"></i>
+    <i style="display:block;width:192px;height:96px;background:var(--ink);transform-origin:left" data-fx="grow" data-at="4.5" data-dur=".9"></i>
+    <i style="display:block;width:96px;height:96px;background:var(--y);transform-origin:left" data-fx="grow" data-at="4.8" data-dur=".9"></i>
   </div>
-
-  <div class="bar" id="bar" role="tablist" aria-label="장면"></div>
-  <div class="ctrl">
-    <button id="prev" aria-label="이전 장면">←</button>
-    <button id="toggle" aria-label="일시정지">일시정지</button>
-    <button id="next" aria-label="다음 장면">→</button>
-    <span class="now" id="now"></span>
+  <p class="abs q" style="left:0;right:0;top:640px;text-align:center;font-size:54px;margin:0" data-fx="up" data-at="1.2" data-out="4">모든 Creative는 <span class="y">나로부터</span> 시작된다.</p>
+  <p class="abs mono dim" style="left:0;right:0;top:730px;text-align:center;font-size:22px;letter-spacing:.3em;margin:0" data-fx="fade" data-at="2" data-out="4">THE FROM</p>
+  <div class="abs" style="left:1120px;top:436px">
+    <div class="hl" style="font-size:112px" data-fx="left" data-at="5.4">thefrom-ux</div>
+    <div class="q dim" style="font-size:36px;margin-top:16px" data-fx="left" data-at="5.9">더프롬의 <span style="color:var(--ink)">판단</span>을 계산하는 스킬</div>
   </div>
+</section>
+
+<!-- ───────── I-1 · 1U ───────── -->
+<section class="sc" data-s="8" data-e="17">
+  <div class="chap"><b>I</b> · 철학 — 1U</div>
+  <svg class="abs" style="left:0;top:0" width="1920" height="1080" id="grid1u">
+  </svg>
+  <div class="abs" style="left:216px;top:300px;width:96px;height:96px;background:var(--ink)" data-fx="scale" data-at=".2"></div>
+  <div class="abs mono dim" style="left:216px;top:410px;font-size:20px" data-fx="fade" data-at=".5">1U</div>
+  <div class="abs" id="derive" style="left:420px;top:300px;display:flex;flex-direction:column;gap:22px"></div>
+  <div class="abs" style="left:216px;top:720px;width:1500px">
+    <div class="hl" style="font-size:84px" data-fx="up" data-at="1">1U는 값이 아니라 <span class="y">방법</span>이다.</div>
+    <div class="q dim" style="font-size:36px;margin-top:22px" data-fx="up" data-at="2.6">하나의 단위에서 모든 치수가 파생된다 — 그리고 그 뼈대는 <span style="color:var(--ink)">보이지 않는다.</span></div>
+  </div>
+</section>
+
+<!-- ───────── I-2 · 자메뷰 ───────── -->
+<section class="sc" data-s="17" data-e="26">
+  <div class="chap"><b>I</b> · 철학 — 자메뷰</div>
+  <div class="abs" style="left:216px;top:210px;display:flex;gap:120px">
+    <div data-fx="up" data-at=".2"><div class="mono dim" style="font-size:22px;letter-spacing:.1em">DÉJÀ VU</div><div class="q" style="font-size:44px;margin-top:10px">낯선 것이 익숙하게</div></div>
+    <div data-fx="up" data-at=".8"><div class="mono y" style="font-size:22px;letter-spacing:.1em">JAMAIS VU</div><div class="q" style="font-size:44px;margin-top:10px">익숙한 것이 처음 보는 것처럼</div></div>
+  </div>
+  <!-- 익숙한 진행 바 → 새 해석 -->
+  <div class="abs" style="left:216px;top:430px;width:1488px">
+    <div class="mono dim" style="font-size:20px" data-fx="fade" data-at="1.4">누구나 아는 진행 바 — 구조는 그대로</div>
+    <div style="position:relative;height:14px;background:var(--faint);border-radius:7px;margin-top:22px;overflow:hidden" data-fx="fade" data-at="1.6">
+      <div id="plainbar" style="position:absolute;left:0;top:0;bottom:0;width:0;background:var(--ink);border-radius:7px"></div>
+    </div>
+    <div id="segs" style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:40px"></div>
+  </div>
+  <div class="abs" style="left:216px;top:790px;width:1500px">
+    <div class="hl" style="font-size:72px" data-fx="up" data-at="5">관성은 <u style="text-underline-offset:12px">구조</u>에서 지키고,<br>새로움은 <span class="y">해석</span>에서 만든다.</div>
+  </div>
+</section>
+
+<!-- ───────── I-3 · 노랑 / 철학의 층위 ───────── -->
+<section class="sc" data-s="26" data-e="32">
+  <div class="chap"><b>I</b> · 철학 — 태도</div>
+  <div class="abs" id="dots" style="left:216px;top:250px;display:flex;gap:26px"></div>
+  <div class="abs" style="left:216px;top:400px;width:1500px">
+    <div class="q" style="font-size:52px" data-fx="up" data-at=".6">노랑은 팔레트가 아니라 <span class="y">태도</span> — 아이부터 노년까지, 전 세대.</div>
+    <div class="hl" style="font-size:76px;margin-top:120px" data-fx="up" data-at="2.4">철학은 <span class="y">판단의 방법</span>이다.</div>
+    <div class="hl dim" style="font-size:76px;margin-top:8px" data-fx="up" data-at="3.2">결과물의 소재가 아니다.</div>
+  </div>
+</section>
+
+<!-- ───────── II-1 · AIRPLANE ───────── -->
+<section class="sc" data-s="32" data-e="47">
+  <div class="chap"><b>II</b> · 방법론 — Airplane effect</div>
+  <div class="abs" style="left:96px;top:130px">
+    <div class="hl" style="font-size:66px" data-fx="up" data-at=".2">경계 없이 여행하되, <span class="y">원리만</span> 가져온다.</div>
+  </div>
+  <svg class="abs" style="left:0;top:0" width="1920" height="1080" id="flight"></svg>
+  <div class="abs" id="ismcard" style="left:96px;top:760px;width:1728px;display:grid;grid-template-columns:420px 1fr 1fr;gap:40px;align-items:start"></div>
+</section>
+
+<!-- ───────── II-2 · 반대 대상 ───────── -->
+<section class="sc" data-s="47" data-e="54">
+  <div class="chap"><b>II</b> · 방법론 — 반대 대상</div>
+  <div class="abs" style="left:216px;top:220px;width:1500px">
+    <div class="hl" style="font-size:64px" data-fx="up" data-at=".2">무엇에 반대하는지 먼저 적는다.</div>
+    <div class="mono" style="font-size:40px;margin-top:70px;display:flex;flex-wrap:wrap;gap:18px;align-items:center">
+      <span data-fx="pop" data-at="1" style="border:2px solid var(--ink);padding:8px 18px">층위</span><span class="dim" data-fx="fade" data-at="1.2">·</span>
+      <span data-fx="pop" data-at="1.4" style="border:2px solid var(--ink);padding:8px 18px">지배 규범</span><span class="y" data-fx="fade" data-at="1.6">→</span>
+      <span data-fx="pop" data-at="1.8" style="border:2px solid var(--y);color:var(--y);padding:8px 18px">어기는 지점</span><span class="dim" data-fx="fade" data-at="2">·</span>
+      <span data-fx="pop" data-at="2.2" style="border:2px solid var(--ink);padding:8px 18px">강도</span>
+    </div>
+    <div class="mono dim" style="font-size:26px;margin-top:40px;display:flex;gap:28px;flex-wrap:wrap" data-fx="fade" data-at="2.8"><span>CAT 업계 관습</span><span>COMP 경쟁사</span><span>SELF 우리 과거</span><span>PLAT 플랫폼</span><span>ISM 사조</span><span>EXP 타겟의 기대</span><span style="color:var(--ink)">· 이탈 · 역전 · 거부</span></div>
+    <div class="q" style="font-size:46px;margin-top:90px" data-fx="up" data-at="3.8">실례 2건이 없으면 반대하지 않는다 — <span class="r">상상 속의 적</span>은 공격하지 않는다.</div>
+  </div>
+</section>
+
+<!-- ───────── II-3 · TUNNEL ───────── -->
+<section class="sc" data-s="54" data-e="65">
+  <div class="chap"><b>II</b> · 방법론 — Tunnel effect</div>
+  <svg class="abs" style="left:0;top:0" width="1920" height="1080" id="tunnel"></svg>
+  <div class="abs" style="left:96px;top:130px">
+    <div class="hl" style="font-size:66px" data-fx="up" data-at=".2">레이어가 겹칠수록 <span class="y">밝아진다.</span></div>
+  </div>
+  <div class="abs" id="layers" style="left:96px;top:850px;display:flex;gap:28px"></div>
+</section>
+
+<!-- ───────── III-1 · 패턴 재해석 ───────── -->
+<section class="sc" data-s="65" data-e="76">
+  <div class="chap"><b>III</b> · 분석과 추론 — 패턴 재해석</div>
+  <div class="abs" style="left:96px;top:130px"><div class="hl" style="font-size:62px" data-fx="up" data-at=".2">패턴을 <span class="y">원래 하려던 일</span>로 되돌린다.</div></div>
+  <div class="abs" style="left:96px;top:300px;width:1728px;display:grid;grid-template-columns:380px 80px 380px 80px 1fr;align-items:center;gap:0">
+    <!-- 통상 -->
+    <div data-fx="up" data-at=".8" style="border:2px solid var(--line);border-radius:18px;padding:28px;height:360px;display:flex;flex-direction:column;gap:16px">
+      <div class="mono dim" style="font-size:18px">PAT-RESULT · 통상적 해석 · CAT</div>
+      <div style="width:120px;height:120px;border-radius:50%;background:var(--faint);align-self:center;margin-top:10px"></div>
+      <div class="hl" style="font-size:36px;text-align:center">"용감한 탐험가"</div>
+      <div class="dim" style="font-size:22px;text-align:center">유형명 + 캐릭터 + 해시태그</div>
+    </div>
+    <div class="y mono" style="font-size:44px;text-align:center" data-fx="fade" data-at="1.8">→</div>
+    <div data-fx="up" data-at="2" style="border:2px solid var(--y);border-radius:18px;padding:28px;height:360px;display:flex;flex-direction:column;justify-content:center;gap:18px">
+      <div class="mono y" style="font-size:18px">원래 무엇을 하려던 것인가</div>
+      <div class="q" style="font-size:40px">"나를 이해한다"</div>
+      <div class="dim" style="font-size:22px;line-height:1.5">기능은 지키고,<br>메타포를 통과시켜 다시 표현한다</div>
+    </div>
+    <div class="y mono" style="font-size:44px;text-align:center" data-fx="fade" data-at="3.2">→</div>
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <div data-fx="left" data-at="3.4" style="border-left:6px solid var(--ink);padding:14px 24px"><div class="mono dim" style="font-size:18px">비주얼</div><div style="font-size:30px;margin-top:6px">한 문장 + 네 영역 위의 내 위치</div></div>
+      <div data-fx="left" data-at="4" style="border-left:6px solid var(--g);padding:14px 24px"><div class="mono g" style="font-size:18px">작동</div><div style="font-size:30px;margin-top:6px">"왜 이 문장인가" — 근거가 된 내 답을 펼친다</div></div>
+      <div data-fx="left" data-at="4.6" style="border-left:6px solid var(--y);padding:14px 24px"><div class="mono y" style="font-size:18px">사용자가 얻는 것</div><div style="font-size:30px;margin-top:6px">이 결과가 왜 나인지 납득한다</div></div>
+    </div>
+  </div>
+  <div class="abs q dim" style="left:96px;top:760px;font-size:36px" data-fx="up" data-at="6">메타포는 프로젝트에 <span style="color:var(--ink)">하나</span>. 화면마다 달라지는 것은 재해석이다.</div>
+</section>
+
+<!-- ───────── III-2 · 효익 시각화 ───────── -->
+<section class="sc" data-s="76" data-e="84">
+  <div class="chap"><b>III</b> · 분석과 추론 — 효익 시각화</div>
+  <div class="abs" style="left:96px;top:130px"><div class="hl" style="font-size:62px" data-fx="up" data-at=".2">메타포는 <span class="dim">톤</span>을, 사용자의 일은 <span class="y">형식</span>을 정한다.</div></div>
+  <div class="abs" style="left:96px;top:290px;width:1728px;display:grid;grid-template-columns:repeat(4,1fr);gap:24px" id="chain"></div>
+  <div class="abs" style="left:96px;top:560px;width:1728px;height:360px;border:2px solid var(--line);border-radius:22px" data-fx="fade" data-at="2.2">
+    <svg width="1728" height="360" id="viz"></svg>
+  </div>
+</section>
+
+<!-- ───────── III-3 · 명분·효익 ───────── -->
+<section class="sc" data-s="84" data-e="90">
+  <div class="chap"><b>III</b> · 분석과 추론 — 명분과 효익</div>
+  <div class="abs" style="left:96px;top:130px"><div class="hl" style="font-size:62px" data-fx="up" data-at=".2">명분만 있고 효익이 없으면 <span class="r">개살구</span>.</div></div>
+  <div class="abs" style="left:96px;top:300px;width:1728px;display:grid;grid-template-columns:1fr 1fr;gap:48px">
+    <div data-fx="up" data-at=".7" style="position:relative;border:2px solid var(--line);border-radius:22px;padding:36px;height:520px">
+      <div class="mono dim" style="font-size:20px">A · 시스템 주도 — 1U가 형태를 정한다</div>
+      <div id="tilesA" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px"></div>
+      <div class="abs hl r" data-fx="stamp" data-at="2.4" style="right:36px;top:30px;font-size:54px;border:6px solid var(--r);padding:6px 24px;transform-origin:center">개살구</div>
+    </div>
+    <div data-fx="up" data-at="1.1" style="position:relative;border:2px solid var(--line);border-radius:22px;padding:36px;height:520px">
+      <div class="mono dim" style="font-size:20px">B · 경험 주도 — 방법론은 구조·포인트·디테일에</div>
+      <div class="hl" style="font-size:44px;margin-top:40px;line-height:1.25">혼자 있는 시간에 충전하고,<br>그때의 판단을 믿는 사람</div>
+      <svg width="820" height="170" id="tracksB" style="margin-top:28px"></svg>
+      <div class="abs hl g" data-fx="stamp" data-at="3" style="right:36px;top:30px;font-size:54px;border:6px solid var(--g);padding:6px 24px">효익 ✓</div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── III-4 · 노하우북 조형 판단 ───────── -->
+<section class="sc" data-s="90" data-e="101">
+  <div class="chap"><b>III</b> · 분석과 추론 — Knowhow Book의 눈</div>
+  <svg class="abs" style="left:0;top:0" width="1920" height="1080" id="wheel"></svg>
+  <div class="abs" style="left:1060px;top:250px;width:780px">
+    <div class="mono dim" style="font-size:20px" data-fx="fade" data-at="3.4">Lv.2-2 · Visual System</div>
+    <div class="hl" style="font-size:52px;margin-top:10px;line-height:1.2" data-fx="up" data-at="3.6">톤 앤 매너 =<br><span class="y">컬러</span> × <span class="y">무드</span> × <span class="y">비주얼</span> × <span class="y">타이포</span></div>
+    <div class="mono dim" style="font-size:20px;margin-top:70px" data-fx="fade" data-at="5.6">Lv.2-1 · Detail Expression</div>
+    <div class="hl" style="font-size:52px;margin-top:10px" data-fx="up" data-at="5.8">앵글 · 빛과 그림자 · 질감</div>
+    <div class="q dim" style="font-size:28px;margin-top:14px;line-height:1.45" data-fx="up" data-at="6.4">디테일은 요소를 많이 넣는 것이 아니라,<br>어떻게 보여주고 드러내고 느끼게 하는가에서 결정된다.</div>
+    <div class="mono y" style="font-size:24px;margin-top:40px" data-fx="fade" data-at="8">→ G7 조형 완성도의 판정 기준</div>
+  </div>
+</section>
+
+<!-- ───────── IV-1 · 게이트 ───────── -->
+<section class="sc" data-s="101" data-e="108">
+  <div class="chap"><b>IV</b> · 도출 — 출구</div>
+  <div class="abs" style="left:96px;top:130px"><div class="hl" style="font-size:62px" data-fx="up" data-at=".2">일곱 조건이 <span class="y">동시에</span> 켜질 때만 나간다.</div></div>
+  <div class="abs" id="gates" style="left:96px;top:330px;width:1728px;display:grid;grid-template-columns:repeat(7,1fr);gap:20px"></div>
+  <div class="abs" style="left:96px;top:790px;display:flex;gap:60px;font-size:28px" data-fx="fade" data-at="4.4">
+    <span><span style="display:inline-block;width:22px;height:22px;border:3px solid var(--ink);vertical-align:-3px;margin-right:12px"></span>AI가 예비 판정 → 사람이 확정</span>
+    <span><span style="display:inline-block;width:22px;height:22px;border:3px solid var(--b);vertical-align:-3px;margin-right:12px"></span>사람이 최종 판정</span>
+    <span class="dim">◆ 그 전에 C 게이트 — 러프 한 장으로 방향부터</span>
+  </div>
+</section>
+
+<!-- ───────── IV-2 · 도출물 ───────── -->
+<section class="sc" data-s="108" data-e="118">
+  <div class="chap"><b>IV</b> · 도출 — 무엇이 나오나</div>
+  <div class="abs" style="left:96px;top:250px;width:900px">
+    <div class="q" style="font-size:58px;line-height:1.3" data-fx="up" data-at=".3">사용자는 <span style="color:var(--ink)">쓰던 대로</span> 쓰고,<br><span class="y">처음 보는 것처럼</span> 느낀다.</div>
+    <div style="margin-top:80px;display:flex;flex-direction:column;gap:22px;font-size:32px">
+      <div data-fx="left" data-at="2.2"><span class="mono y" style="margin-right:18px">01</span>375px 인터랙티브 프로토타입</div>
+      <div data-fx="left" data-at="2.7"><span class="mono y" style="margin-right:18px">02</span>S0~S5 — 왜 이렇게 판단했는지의 기록</div>
+      <div data-fx="left" data-at="3.2"><span class="mono y" style="margin-right:18px">03</span>판정 키트 — 사람이 결정할 재료</div>
+    </div>
+  </div>
+  <div class="abs" style="left:1160px;top:130px;width:440px;height:860px;border-radius:56px;border:3px solid #444;background:#F4F4F1;overflow:hidden;color:#111" data-fx="rise" data-at=".6">
+    <div style="background:#111;color:#F4F4F1;padding:70px 34px 34px">
+      <div style="font-size:16px;color:#9a9a96">8개의 답으로 맞춘 당신</div>
+      <div style="font-weight:900;font-size:34px;line-height:1.25;margin-top:12px" data-fx="type" data-at="1.4" data-dur="2.2" data-text="혼자 있는 시간에 충전하고, 정해 둔 것보다 그때의 판단을 믿는 사람"></div>
+      <div style="font-size:15px;color:#9a9a96;margin-top:16px;text-decoration:underline">왜 이 문장인가요</div>
+    </div>
+    <svg width="440" height="360" id="phoneTracks"></svg>
+    <div style="margin:0 28px;background:#111;color:#F4F4F1;border-radius:14px;padding:18px;text-align:center;font-weight:700;font-size:18px" data-fx="up" data-at="4.4">커뮤니티에 공개하기</div>
+  </div>
+</section>
+
+<!-- ───────── V-1 · 이즘 16 ───────── -->
+<section class="sc" data-s="118" data-e="127">
+  <div class="chap"><b>V</b> · 재료 — 여행한 16개의 사조</div>
+  <div class="abs" id="isms" style="left:96px;top:150px;width:1728px;display:grid;grid-template-columns:repeat(4,1fr);gap:18px"></div>
+  <div class="abs q dim" style="left:96px;top:980px;font-size:26px" data-fx="fade" data-at="5">각 사조에서 <span style="color:var(--ink)">가져올 것</span>(원리)과 <span style="color:var(--ink)">두고 올 것</span>(시각 인용)을 나눠 기록한다.</div>
+</section>
+
+<!-- ───────── V-2 · 노하우북 ───────── -->
+<section class="sc" data-s="127" data-e="136">
+  <div class="chap"><b>V</b> · 재료 — 더프롬 Knowhow Book</div>
+  <div class="abs" id="books" style="left:96px;top:160px;width:1728px;display:grid;grid-template-columns:repeat(3,1fr);gap:28px"></div>
+  <div class="abs" style="left:96px;top:880px;display:flex;align-items:baseline;gap:28px" data-fx="up" data-at="4.6">
+    <span class="hl y" style="font-size:96px" id="idcount">219</span>
+    <span class="q" style="font-size:34px">개의 ID — 사조 16 · 조형 어휘 171 · UI 패턴·모션·상태·시각화 32</span>
+  </div>
+</section>
+
+<!-- ───────── CLOSE · 브리프 ───────── -->
+<section class="sc" data-s="136" data-e="147">
+  <div class="chap"><b>→</b> · 시작</div>
+  <div class="abs" style="left:96px;top:150px;width:1728px">
+    <div class="hl" style="font-size:66px" data-fx="up" data-at=".2">"더프롬처럼"이 아니라, <span class="y">브리프</span>에서 시작한다.</div>
+    <div class="q dim" style="font-size:32px;margin-top:20px" data-fx="up" data-at=".8">감각을 흉내 내지 않고 판단을 계산한다. 판단의 재료는 브리프다.</div>
+    <div id="brief6" style="display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:70px"></div>
+  </div>
+  <div class="abs" style="left:912px;top:880px;width:96px;height:96px;background:var(--ink)" data-fx="scale" data-at="7.2"></div>
+  <div class="abs mono dim" style="left:0;right:0;top:1000px;text-align:center;font-size:20px;letter-spacing:.3em" data-fx="fade" data-at="7.8">나로부터 · THE FROM</div>
+</section>
+
+</div></div>
+
+<div class="ctrl" id="ctrl">
+  <button id="play" aria-label="재생">재생</button>
+  <div class="scrubwrap">
+    <input class="scrub" id="scrub" type="range" min="0" max="147" step=".1" value="0" aria-label="재생 위치">
+    <div class="chaps" id="chaps"></div>
+  </div>
+  <span class="time" id="time">0:00 / 2:27</span>
+</div>
 </div>
 
 <script>
 (function(){
-  var scenes=[].slice.call(document.querySelectorAll('.scene'));
-  var bar=document.getElementById('bar'), now=document.getElementById('now');
-  var toggle=document.getElementById('toggle'), term=document.getElementById('term');
-  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var cur=0, playing=!reduce, t0=0, elapsed=0, raf=0, typeTimer=0;
-  var prompt='<span class="p">›</span> [브리프 붙여넣기]\n<span class="p">›</span> 더프롬 방식으로 진행해줘.\n  범위: 진입 · 결과 · 커뮤니티 3화면\n  브랜드: 클라이언트 브랜드 첨부\n  C 게이트에서 멈춰줘.';
-  scenes.forEach(function(s,i){
-    var b=document.createElement('button'); b.setAttribute('role','tab');
-    b.setAttribute('aria-label',(i+1)+'. '+s.dataset.t); b.innerHTML='<i></i>';
-    b.onclick=function(){go(i)}; bar.appendChild(b);
+const DUR=147;
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const eo=x=>1-Math.pow(1-clamp(x),3);
+const eio=x=>{x=clamp(x);return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2};
+const $=s=>document.querySelector(s);
+const NS='http://www.w3.org/2000/svg';
+function svgEl(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+function h(html){const d=document.createElement('div');d.innerHTML=html.trim();return d.firstChild}
+
+/* ── 빌드: 반복 요소 ── */
+// I-1 1U 파생 눈금
+const der=$('#derive');
+[['0.5U',4,'컴포넌트 내부'],['1U',8,''],['2U',16,'본문 · 거터'],['3U',24,'모바일 마진'],['5U',40,'제목'],['8U',64,'대제목']].forEach((d,i)=>{
+  der.appendChild(h(`<div style="display:flex;align-items:center;gap:24px" data-fx="left" data-at="${.7+i*.25}"><span class="mono" style="width:90px;font-size:24px">${d[0]}</span><i style="display:block;height:18px;width:${d[1]*6}px;background:${i==1?'var(--y)':'var(--ink)'}"></i><span class="mono dim" style="font-size:20px">${d[1]}px ${d[2]}</span></div>`));
+});
+const g1=$('#grid1u');
+for(let x=96;x<=1824;x+=96){svgEl('line',{x1:x,y1:0,x2:x,y2:1080,stroke:'#FFFFFF','stroke-width':1,class:'gl'},g1)}
+for(let y=108;y<=1080;y+=96){svgEl('line',{x1:0,y1:y,x2:1920,y2:y,stroke:'#FFFFFF','stroke-width':1,class:'gl'},g1)}
+// I-2 새 해석 세그먼트
+const segs=$('#segs');
+['에너지','결정','계획','반응'].forEach((n,i)=>segs.appendChild(h(`<div data-fx="up" data-at="${3+i*.18}"><div class="mono dim" style="font-size:18px;margin-bottom:12px">${n}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><i class="seg" data-k="${i*2}" style="display:block;height:14px;border-radius:7px;background:var(--faint)"></i><i class="seg" data-k="${i*2+1}" style="display:block;height:14px;border-radius:7px;background:var(--faint)"></i></div></div>`)));
+// I-3 점
+const dots=$('#dots');
+for(let i=0;i<9;i++)dots.appendChild(h(`<i data-fx="scale" data-at="${.1+i*.06}" style="display:block;width:44px;height:44px;border-radius:50%;background:${i==4?'var(--y)':'#2E2E2C'}"></i>`));
+// II-1 비행
+const ISM=[
+ ['JP','일본 미학','14C–',175,560],['KR','한국 전통 미학','고전',300,660],
+ ['ARTCRAFT','미술공예운동','1861',420,540],['NOUVEAU','아르누보','1883',520,660],
+ ['FUTUR','미래주의','1909',640,520],['DECO','아르데코','1910s',740,640],
+ ['SUPREM','절대주의','1915',850,530],['CONSTR','구성주의','1915',950,650],
+ ['DADA','다다','1916',1050,520],['STIJL','데 스틸','1917',1150,640],
+ ['BAUHAUS','바우하우스','1919',1265,520],['SWISS','스위스','1950s',1380,650],
+ ['BRUTAL','브루탈리즘','1950s–',1490,530],['POSTMOD','멤피스','1966',1590,650],
+ ['DECON','해체주의','1967',1690,530],['PUNK','펑크','1976',1790,650]];
+const fl=$('#flight');
+svgEl('line',{x1:120,y1:710,x2:1830,y2:710,stroke:'#2A2A28','stroke-width':2},fl);
+const nodes={};
+ISM.forEach((d,i)=>{
+  const g=svgEl('g',{'data-fx':'fade','data-at':(.6+i*.06).toFixed(2)},fl);
+  nodes[d[0]]={c:svgEl('circle',{cx:d[3],cy:d[4],r:9,fill:'#3A3A37'},g),x:d[3]};
+  svgEl('text',{x:d[3],y:d[4]-24,'text-anchor':'middle',fill:'#F2F2EF','font-size':20,'font-family':'Noto Sans KR, Noto Sans CJK KR, sans-serif'},g).textContent=d[1];
+  svgEl('text',{x:d[3],y:d[4]+40,'text-anchor':'middle',fill:'#8C8C88','font-size':16,'font-family':'IBM Plex Mono, monospace'},g).textContent=d[2];
+});
+const STOPS=[
+ ['JP','일본 미학','완결을 유보해 수신자의 참여를 요구한다','크라프트지 텍스처 + 미색 배경'],
+ ['STIJL','데 스틸','불균등한 면적 비율에서 성립하는 긴장','적·황·청 + 굵은 검정 격자'],
+ ['BAUHAUS','바우하우스','장식은 금지 대상이 아니라 입증 대상','원·삼각형·사각형 + 3원색'],
+ ['BRUTAL','브루탈리즘','무엇으로 만들어졌는지 숨기지 않는다','굵은 테두리 + 형광 노랑 + 하드 섀도']];
+const pts=[[120,420]].concat(STOPS.map(s=>{const d=ISM.find(x=>x[0]==s[0]);return[d[3],d[4]]})).concat([[1840,380]]);
+let dpath=`M${pts[0][0]},${pts[0][1]}`;
+for(let i=1;i<pts.length;i++){const [x0,y0]=pts[i-1],[x1,y1]=pts[i];const mx=(x0+x1)/2;dpath+=` C${mx},${Math.min(y0,y1)-160} ${mx},${Math.min(y0,y1)-160} ${x1},${y1}`}
+const fpath=svgEl('path',{d:dpath,fill:'none',stroke:'#FFD200','stroke-width':2.5,'stroke-dasharray':'2 10','stroke-linecap':'round'},fl);
+const plane=svgEl('g',{},fl);
+svgEl('circle',{r:14,fill:'#FFD200'},plane);svgEl('circle',{r:30,fill:'none',stroke:'#FFD200','stroke-opacity':.35,'stroke-width':2},plane);
+const card=$('#ismcard');
+card.innerHTML=`<div><div class="mono dim" style="font-size:20px" id="ic-id"></div><div class="hl" style="font-size:56px;margin-top:8px" id="ic-name"></div></div>
+<div style="border-left:6px solid var(--y);padding-left:26px"><div class="mono y" style="font-size:20px">가져올 것 · 원리</div><div class="q" style="font-size:38px;margin-top:10px;line-height:1.3" id="ic-take"></div></div>
+<div style="border-left:6px solid var(--r);padding-left:26px"><div class="mono r" style="font-size:20px">두고 올 것 · 시각 인용</div><div style="font-size:34px;margin-top:10px;line-height:1.3;text-decoration:line-through;text-decoration-color:var(--r);color:var(--dim)" id="ic-leave"></div></div>`;
+// II-3 터널
+const tn=$('#tunnel');
+const tg=svgEl('g',{},tn);
+for(let i=0;i<12;i++){const k=Math.pow(.78,i);const w=1920*k,hh=1080*k;svgEl('rect',{x:960-w/2,y:560-hh/2,width:w,height:hh,fill:'none',stroke:'#FFFFFF','stroke-opacity':(.18-i*.012).toFixed(3),'stroke-width':2,class:'tr','data-i':i},tg)}
+const defs=svgEl('defs',{},tn);const rg=svgEl('radialGradient',{id:'halo'},defs);svgEl('stop',{offset:'0%','stop-color':'#FFD200','stop-opacity':.55},rg);svgEl('stop',{offset:'100%','stop-color':'#FFD200','stop-opacity':0},rg);
+const halo=svgEl('ellipse',{cx:960,cy:560,rx:200,ry:120,fill:'url(#halo)',id:'halo'},tn);
+const glow=svgEl('rect',{x:960-78,y:560-44,width:156,height:88,fill:'#FFD200',id:'exit'},tn);
+const layers=$('#layers');
+[['①','타겟','누가 · 어떤 순간에 · 어떤 기기로','var(--ink)'],['②','클라이언트 브랜드','무엇이 이 브랜드만의 것인가','var(--b)'],['③','소비자 이용','지킬 관성 · 그 순간의 동기와 감정','var(--g)']].forEach((l,i)=>{
+  layers.appendChild(h(`<div data-fx="up" data-at="${1.6+i*2}" style="width:560px;border-top:6px solid ${l[3]};padding-top:18px"><div class="hl" style="font-size:40px">${l[0]} ${l[1]}</div><div class="dim" style="font-size:24px;margin-top:8px">${l[2]}</div></div>`));
+});
+// III-2 체인
+const chain=$('#chain');
+[['① 과업','내가 어떤 사람인지 이해한다'],['② 보이게 할 것','네 영역 위의 내 위치'],['③ 형식','VIZ-POS · VIZ-CMP'],['④ 효익 지표','설명 없이 3초 안에 안다']].forEach((c,i)=>{
+  chain.appendChild(h(`<div data-fx="up" data-at="${.6+i*.35}" style="border-top:4px solid ${i==3?'var(--y)':'var(--line)'};padding-top:18px"><div class="mono ${i==3?'y':'dim'}" style="font-size:20px">${c[0]}</div><div style="font-size:32px;margin-top:10px;line-height:1.3;${i==2?'font-family:var(--mono)':''}">${c[1]}</div></div>`));
+});
+const viz=$('#viz');
+const VT=[['혼자 충전','함께 충전',.12,.44],['따져 보고','느낌 따라',.72,.55],['미리 정함','그때그때',.9,.5],['속으로 흡수','바로 표현',.2,.52]];
+const vDots=[];
+VT.forEach((v,i)=>{const y=70+i*72;
+  svgEl('text',{x:40,y:y+6,fill:'#8C8C88','font-size':20,'font-family':'Noto Sans KR, Noto Sans CJK KR'},viz).textContent=v[0];
+  svgEl('text',{x:1300,y:y+6,fill:'#8C8C88','font-size':20,'font-family':'Noto Sans KR, Noto Sans CJK KR','text-anchor':'end'},viz).textContent=v[1];
+  svgEl('line',{x1:180,y1:y,x2:1160,y2:y,stroke:'#3A3A37','stroke-width':3},viz);
+  const avg=svgEl('circle',{cx:180+980*v[3],cy:y,r:9,fill:'none',stroke:'#8C8C88','stroke-width':3},viz);
+  const band=svgEl('rect',{x:0,y:y-9,width:0,height:18,rx:9,fill:'#FFD200','fill-opacity':.18},viz);
+  const dot=svgEl('circle',{cx:670,cy:y,r:14,fill:'#FFD200'},viz);
+  vDots.push({dot,band,avg,x:180+980*v[2],i});
+});
+const ringBg=svgEl('circle',{cx:1520,cy:180,r:90,fill:'none',stroke:'#2A2A28','stroke-width':12},viz);
+const ring=svgEl('circle',{cx:1520,cy:180,r:90,fill:'none',stroke:'#FFD200','stroke-width':12,'stroke-dasharray':565.5,'stroke-dashoffset':565.5,transform:'rotate(-90 1520 180)'},viz);
+const ringT=svgEl('text',{x:1520,y:196,'text-anchor':'middle',fill:'#F2F2EF','font-size':48,'font-family':'IBM Plex Mono, monospace'},viz);ringT.textContent='0s';
+svgEl('text',{x:1520,y:320,'text-anchor':'middle',fill:'#8C8C88','font-size':20,'font-family':'Noto Sans KR, Noto Sans CJK KR'},viz).textContent='● 나  ○ 또래 평균  ▬ 답이 갈린 폭';
+// III-3 A 타일 · B 트랙
+const tA=$('#tilesA');
+['78','54','66','71','12','40','—','—','—','—','—','—'].forEach((n,i)=>tA.appendChild(h(`<div data-fx="scale" data-at="${1+i*.05}" style="aspect-ratio:1.4;background:#1C1C1B;border:1px solid #2E2E2C;border-radius:4px;display:grid;place-items:center;font-family:var(--mono);font-size:30px;color:#5E5E5B">${n}</div>`)));
+const tB=$('#tracksB');const bDots=[];
+[[.1],[.7],[.88]].forEach((v,i)=>{const y=30+i*55;svgEl('line',{x1:0,y1:y,x2:800,y2:y,stroke:'#3A3A37','stroke-width':3},tB);bDots.push({d:svgEl('circle',{cx:400,cy:y,r:12,fill:'#338F74'},tB),x:800*v[0]})});
+// III-4 휠
+const wh=$('#wheel');const P=['균형','비율','강조','대비','리듬','정렬','위계','여백','움직임','반복','다양성','통일'];
+const cx=560,cy=600,R=300;
+svgEl('circle',{cx,cy,r:R,fill:'none',stroke:'#2A2A28','stroke-width':2,'data-fx':'fade','data-at':'.3'},wh);
+const cg=svgEl('g',{'data-fx':'scale','data-at':'.2'},wh);
+svgEl('circle',{cx,cy,r:118,fill:'#161615',stroke:'#FFD200','stroke-width':2},cg);
+svgEl('text',{x:cx,y:cy-8,'text-anchor':'middle',fill:'#F2F2EF','font-size':30,'font-weight':900,'font-family':'Noto Sans KR, Noto Sans CJK KR'},cg).textContent='시각적 무게감';
+svgEl('text',{x:cx,y:cy+30,'text-anchor':'middle',fill:'#8C8C88','font-size':17,'font-family':'Noto Sans KR, Noto Sans CJK KR'},cg).textContent='색상 · 크기 · 형태 · 위치 · 여백';
+P.forEach((p,i)=>{const a=-Math.PI/2+i*Math.PI*2/12;const x=cx+R*Math.cos(a),y=cy+R*Math.sin(a);
+  const g=svgEl('g',{'data-fx':'scale','data-at':(.6+i*.12).toFixed(2)},wh);
+  svgEl('circle',{cx:x,cy:y,r:46,fill:i<5?'#F2F2EF':'#1C1C1B',stroke:i<5?'none':'#3A3A37','stroke-width':2},g);
+  svgEl('text',{x,y:y+8,'text-anchor':'middle',fill:i<5?'#0B0B0B':'#8C8C88','font-size':22,'font-weight':700,'font-family':'Noto Sans KR, Noto Sans CJK KR'},g).textContent=p;
+});
+svgEl('text',{x:cx,y:cy+R+100,'text-anchor':'middle',fill:'#8C8C88','font-size':20,'font-family':'IBM Plex Mono, monospace','data-fx':'fade','data-at':'2.4'},wh).textContent='Lv.1 · Principles of Design — 12원칙';
+// IV-1 게이트
+const G=[['G1','기성을 따라 하지 않았다',0],['G2','우리만의 색이 있다',1],['G3','쓰던 방식을 해치지 않는다',0],['G4','익숙한 패턴에 새 해석과 효익',0],['G5','처음 본 사람이 "어, 이거"',1],['G6','작동과 비주얼 모두에 컨셉',1],['G7','포트폴리오에 올릴 완성도',1]];
+const gates=$('#gates');
+G.forEach((g,i)=>gates.appendChild(h(`<div class="gate" data-fx="up" data-at="${.6+i*.3}" style="border:3px solid ${g[2]?'var(--b)':'var(--ink)'};border-radius:16px;padding:26px 20px;height:330px;display:flex;flex-direction:column;justify-content:space-between"><i class="lamp" data-k="${i}" style="display:block;width:40px;height:40px;border-radius:50%;background:#222"></i><div><div class="mono" style="font-size:36px">${g[0]}</div><div style="font-size:24px;line-height:1.35;margin-top:10px">${g[1]}</div></div></div>`)));
+// IV-2 폰 트랙
+const pt=$('#phoneTracks');const pDots=[];
+['혼자 충전','따져 보고','미리 정함','속으로 흡수'].forEach((n,i)=>{const y=60+i*72;
+  svgEl('text',{x:34,y:y-16,fill:'#111','font-size':16,'font-weight':700,'font-family':'Noto Sans KR, Noto Sans CJK KR'},pt).textContent=n;
+  svgEl('line',{x1:34,y1:y,x2:406,y2:y,stroke:'#D8D8D4','stroke-width':3},pt);
+  pDots.push({d:svgEl('circle',{cx:220,cy:y,r:10,fill:'#E85E53'},pt),x:34+372*[.08,.7,.93,.12][i]});
+});
+// V-1 이즘 그리드
+const ISMS=[['ARTCRAFT','미술공예운동','1861','장식은 구조에서 나온다'],['NOUVEAU','아르누보','1883','선의 가속·감속 → 모션의 원리'],['DECO','아르데코','1910s','장식을 기하학으로 규율한다'],['FUTUR','미래주의','1909','타입은 의미를 만드는 물질'],
+ ['DADA','다다','1916','고르고 충돌시키는 것도 저작'],['SUPREM','절대주의','1915','환원은 검증 절차'],['CONSTR','구성주의','1915','빼도 무너지지 않으면 지운다'],['STIJL','데 스틸','1917','적은 어휘, 무한한 관계'],
+ ['BAUHAUS','바우하우스','1919','장식은 입증 대상 · 재생산 가능한 부품'],['SWISS','스위스 스타일','1950s','그리드는 결정 비용을 줄이는 도구'],['BRUTAL','브루탈리즘','1950s–','만든 방식을 숨기지 않는다'],['POSTMOD','포스트모던·멤피스','1966','성격은 기능과 동등한 설계 대상'],
+ ['DECON','해체주의','1967','이 위계는 누가 정했는가'],['PUNK','펑크·DIY','1976','도구를 열면 참여가 는다'],['JP','일본 미학','14C–','완결을 유보해 참여를 요구한다'],['KR','한국 전통 미학','고전','변수를 결과로 · 색은 질서의 코드']];
+const ig=$('#isms');
+ISMS.forEach((m,i)=>ig.appendChild(h(`<div data-fx="up" data-at="${.2+i*.12}" style="border-top:2px solid var(--line);padding-top:14px;height:185px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="mono dim" style="font-size:16px">ISM-${m[0]}</span><span class="mono dim" style="font-size:16px">${m[2]}</span></div><div class="hl" style="font-size:34px;margin-top:8px">${m[1]}</div><div class="q" style="font-size:24px;margin-top:10px;color:#CFCFCB;line-height:1.35">${m[3]}</div></div>`)));
+// V-2 노하우북
+const BK=[['Lv.1','Principles of Design','37p · 2026.04','이 모든 원칙은 사람이 이미지를 볼 때 시선을 놓치지 않고 흥미와 몰입감을 주기 위함이다.',[['균형','3'],['비율','8'],['강조','5'],['대비','7'],['리듬','5'],['+ 정렬·위계·여백·움직임·반복·다양성·통일','']]],
+ ['Lv.2-1','Detail Expression in Design','66p · 2026.05','디자인의 디테일은 단순히 요소를 많이 넣는 것이 아니라, 어떻게 보여주고, 어떻게 드러내고, 어떻게 느끼게 하는가에서 결정된다.',[['앵글','5'],['뷰','14'],['빛과 그림자','24'],['질감','12']]],
+ ['Lv.2-2','Visual System','112p · 2026.05','톤 앤 매너는 컬러와 무드, 비주얼 및 타이포 스타일의 일관된 조합을 통해 디자인의 분위기와 감정을 결정한다.',[['컬러','19'],['무드','5'],['비주얼 스타일','4'],['타이포','6'],['구도','23'],['그리드','10'],['레이아웃','9'],['비주얼 요소','12']]]];
+const bk=$('#books');
+BK.forEach((b,i)=>bk.appendChild(h(`<div data-fx="up" data-at="${.3+i*.5}" style="border:2px solid var(--line);border-radius:20px;padding:32px;height:660px;display:flex;flex-direction:column;gap:18px"><div class="mono y" style="font-size:22px">KNOWHOW BOOK ${b[0]}</div><div class="hl" style="font-size:40px;line-height:1.15">${b[1]}</div><div class="mono dim" style="font-size:18px">${b[2]}</div><div class="q" style="font-size:22px;line-height:1.5;color:#CFCFCB">${b[3]}</div><div style="margin-top:auto;display:flex;flex-wrap:wrap;gap:10px">${b[4].map(t=>`<span style="border:1px solid #444;border-radius:99px;padding:6px 14px;font-size:20px">${t[0]}${t[1]?` <b class="y mono">${t[1]}</b>`:''}</span>`).join('')}</div></div>`)));
+// CLOSE 브리프 6
+const b6=$('#brief6');
+[['★1','무엇을','서비스 · 범위 · 흐름'],['★2','누구에게','타겟 · 순간 · 기기'],['★3','핵심 순간','사용자가 얻고 싶은 것'],['★4','브랜드','클라이언트의 것 — 없으면 "없음"'],['★5','제약과 재료','문항 · 데이터 · 금지'],['★6','성공 기준','무엇이 되면 성공인가']].forEach((b,i)=>b6.appendChild(h(`<div data-fx="up" data-at="${1.6+i*.3}" style="border-top:4px solid ${i<3?'var(--y)':'var(--line)'};padding-top:18px"><div class="mono ${i<3?'y':'dim'}" style="font-size:22px">${b[0]}</div><div class="hl" style="font-size:40px;margin-top:6px">${b[1]}</div><div class="dim" style="font-size:24px;margin-top:6px">${b[2]}</div></div>`)));
+
+/* ── 렌더 ── */
+const scenes=[...document.querySelectorAll('.sc')].map(s=>({el:s,s:+s.dataset.s,e:+s.dataset.e,fx:[...s.querySelectorAll('[data-fx]')].map(el=>({el,fx:el.dataset.fx,at:+el.dataset.at||0,dur:+(el.dataset.dur||.8),out:el.dataset.out!=null?+el.dataset.out:null,text:el.dataset.text}))}));
+function applyFx(f,lt){
+  let p=eo((lt-f.at)/f.dur);
+  let o=clamp((lt-f.at)/(f.dur*.6));
+  if(f.out!=null){const q=clamp((lt-f.out)/.6);o*=1-q;}
+  const st=f.el.style;
+  switch(f.fx){
+    case'fade':st.opacity=o;break;
+    case'up':st.opacity=o;st.transform=`translateY(${(1-p)*36}px)`;break;
+    case'left':st.opacity=o;st.transform=`translateX(${(1-p)*-48}px)`;break;
+    case'rise':st.opacity=o;st.transform=`translateY(${(1-p)*120}px)`;break;
+    case'scale':st.opacity=o;st.transform=`scale(${.6+.4*p})`;st.transformOrigin='center';st.transformBox='fill-box';break;
+    case'pop':{const b=clamp((lt-f.at)/.5);const s=b<1?(.6+.4*eo(b)+Math.sin(b*Math.PI)*.12):1;st.opacity=o;st.transform=`scale(${s})`;st.transformBox='fill-box';st.transformOrigin='center';break}
+    case'grow':st.opacity=o>0?1:0;st.transform=`scaleX(${p})`;break;
+    case'stamp':{const b=clamp((lt-f.at)/.35);st.opacity=b;st.transform=`rotate(-7deg) scale(${2.2-1.2*eo(b)})`;break}
+    case'type':{st.opacity=lt>f.at?1:0;const n=Math.round(clamp((lt-f.at)/f.dur)*f.text.length);f.el.textContent=f.text.slice(0,n);break}
+  }
+}
+function custom(i,lt,sc){
+  if(i===0){ // 정사각형 호흡 → 막대
+    const sq=$('#sq');const a=clamp(lt/1),b=clamp((lt-3.8)/.6);
+    sq.style.opacity=a*(1-b);sq.style.transform=`scale(${1+Math.sin(lt*2.4)*.04})`;
+  }
+  if(i===1){ // 그리드: 퍼졌다가 거의 사라진다
+    const on=eo((lt-3)/1.5),off=clamp((lt-6)/1.5);
+    document.querySelectorAll('#grid1u .gl').forEach((l,k)=>{l.setAttribute('stroke-opacity',(on*(.22-.17*off)).toFixed(3))});
+  }
+  if(i===2){ // 진행 바 → 4영역 × 2칸
+    $('#plainbar').style.width=(eio((lt-1.8)/1.4)*62)+'%';
+    document.querySelectorAll('#segs .seg').forEach(s=>{const k=+s.dataset.k;const on=lt>3.8+k*.22;s.style.background=on?(k%2?'var(--y)':'var(--ink)'):'var(--faint)'});
+  }
+  if(i===4){ // 비행
+    const L=fpath.getTotalLength();const p=eio((lt-1.2)/12.4);
+    fpath.style.strokeDashoffset=0;fpath.setAttribute('stroke-opacity',clamp((lt-1)/.6)*.8);
+    const pt=fpath.getPointAtLength(p*L);plane.setAttribute('transform',`translate(${pt.x},${pt.y})`);plane.style.opacity=clamp((lt-1)/.4);
+    let cur=-1;STOPS.forEach((s,k)=>{const n=nodes[s[0]];const reached=pt.x>=n.x-4;n.c.setAttribute('fill',reached?'#FFD200':'#3A3A37');n.c.setAttribute('r',reached?13:9);if(reached)cur=k});
+    Object.keys(nodes).forEach(k=>{if(!STOPS.find(s=>s[0]==k))nodes[k].c.setAttribute('fill',pt.x>nodes[k].x?'#6B6B67':'#3A3A37')});
+    const c=$('#ismcard');
+    if(cur>=0){const s=STOPS[cur];$('#ic-id').textContent='ISM-'+s[0];$('#ic-name').textContent=s[1];$('#ic-take').textContent=s[2];$('#ic-leave').textContent=s[3];
+      const since=lt-1.2-12.4*[.10,.44,.62,.80][cur];c.style.opacity=clamp(since/.5+1);c.style.transform=`translateY(${(1-eo(clamp(since/.5+1)))*20}px)`;}
+    else c.style.opacity=0;
+  }
+  if(i===6){ // 터널: 레이어가 겹칠수록 출구가 밝아진다
+    const n=[1.6,3.6,5.6].filter(t=>lt>t+.4).length;const lvl=clamp((lt-1.6)/6);
+    const ex=$('#exit');const k=.25+.25*n+.1*Math.sin(lt*3)*(n>0);
+    ex.setAttribute('fill-opacity',Math.min(1,k).toFixed(3));
+    const grow=1+n*.45+eo((lt-8)/2)*.9;const hl=$('#halo');hl.setAttribute('rx',160+n*170+eo((lt-8)/2)*260);hl.setAttribute('ry',100+n*100+eo((lt-8)/2)*150);hl.setAttribute('opacity',clamp((lt-1)/1));ex.setAttribute('width',156*grow);ex.setAttribute('height',88*grow);ex.setAttribute('x',960-78*grow);ex.setAttribute('y',560-44*grow);
+    document.querySelectorAll('#tunnel .tr').forEach(r=>{const j=+r.dataset.i;r.setAttribute('stroke-opacity',(clamp((lt-j*.08)/.6)*(.1+.05*n)*(1-j/14)).toFixed(3))});
+  }
+  if(i===8){ // 시각화: 점이 제자리로, 3초 링
+    vDots.forEach(v=>{const p=eo((lt-2.6-v.i*.25)/1.2);v.dot.setAttribute('cx',670+(v.x-670)*p);v.dot.setAttribute('opacity',clamp((lt-2.6-v.i*.25)/.3));
+      const bw=eo((lt-4-v.i*.15)/.8)*[140,90,60,120][v.i];v.band.setAttribute('x',v.x-bw/2);v.band.setAttribute('width',bw);
+      v.avg.setAttribute('opacity',clamp((lt-4.4)/.5))});
+    const rp=clamp((lt-2.6)/3);ring.setAttribute('stroke-dashoffset',565.5*(1-rp));ringT.textContent=(rp*3).toFixed(0)+'s';
+  }
+  if(i===9){bDots.forEach((b,k)=>{const p=eo((lt-1.8-k*.2)/1);b.d.setAttribute('cx',400+(b.x-400)*p)})}
+  if(i===11){document.querySelectorAll('#gates .lamp').forEach(l=>{const k=+l.dataset.k;const on=lt>1.4+k*.35;const blue=G[k][2];l.style.background=on?(blue?'var(--b)':'var(--y)'):'#222';l.style.boxShadow=on?`0 0 34px ${blue?'rgba(89,94,166,.7)':'rgba(255,210,0,.6)'}`:'none'})}
+  if(i===12){pDots.forEach((d,k)=>{const p=eo((lt-3.6-k*.2)/1);d.d.setAttribute('cx',220+(d.x-220)*p)})}
+  if(i===14){const n=Math.round(eo((lt-4.6)/1.6)*219);$('#idcount').textContent=n}
+}
+let T=0;
+function render(t){
+  T=t;
+  scenes.forEach((sc,i)=>{
+    const vis=t>=sc.s-.01&&t<sc.e;
+    const fade=Math.min(clamp((t-sc.s)/.5),clamp((sc.e-t)/.6));
+    sc.el.style.visibility=vis?'visible':'hidden';sc.el.style.opacity=vis?fade:0;
+    if(!vis)return;const lt=t-sc.s;
+    sc.fx.forEach(f=>applyFx(f,lt));custom(i,lt,sc);
   });
-  var bars=[].slice.call(bar.children);
-  function typeOut(){
-    clearTimeout(typeTimer);
-    if(reduce){term.innerHTML=prompt;return}
-    var plain=prompt, i=0; term.innerHTML='<span class="caret"></span>';
-    (function tick(){
-      i++; while(plain[i-1]==='<'){ i=plain.indexOf('>',i)+1 } /* 태그는 한 번에 */
-      term.innerHTML=plain.slice(0,i)+'<span class="caret"></span>';
-      if(i<plain.length) typeTimer=setTimeout(tick, plain[i-1]==='\n'?260:45);
-    })();
-  }
-  function go(i){
-    cur=(i+scenes.length)%scenes.length; elapsed=0; t0=performance.now();
-    scenes.forEach(function(s,k){s.classList.toggle('on',k===cur);s.classList.remove('play')});
-    var s=scenes[cur]; void s.offsetWidth; s.classList.add('play');
-    bars.forEach(function(b,k){b.classList.toggle('done',k<cur);b.setAttribute('aria-selected',k===cur);b.firstChild.style.transform=k<cur?'none':'scaleX(0)'});
-    now.innerHTML='<b>'+(cur+1)+' / '+scenes.length+'</b> · '+s.dataset.t;
-    if(s.contains(term)) typeOut();
-  }
-  function loop(ts){
-    if(playing){
-      var d=+scenes[cur].dataset.dur, p=Math.min(1,(elapsed+(ts-t0))/d);
-      bars[cur].firstChild.style.transform='scaleX('+p+')';
-      if(p>=1){ if(cur<scenes.length-1){ go(cur+1) } else { setPlay(false) } }
-    }
-    raf=requestAnimationFrame(loop);
-  }
-  function setPlay(v){
-    if(v&&!playing){ t0=performance.now(); if(cur===scenes.length-1&&elapsed>=+scenes[cur].dataset.dur){go(0)} }
-    if(!v&&playing){ elapsed+=performance.now()-t0 }
-    playing=v; toggle.textContent=v?'일시정지':'재생'; toggle.setAttribute('aria-label',v?'일시정지':'재생');
-  }
-  toggle.onclick=function(){setPlay(!playing)};
-  document.getElementById('prev').onclick=function(){go(cur-1)};
-  document.getElementById('next').onclick=function(){go(cur+1)};
-  addEventListener('keydown',function(e){
-    if(e.key==='ArrowRight'){go(cur+1)} else if(e.key==='ArrowLeft'){go(cur-1)}
-    else if(e.key===' '&&e.target===document.body){e.preventDefault();setPlay(!playing)}
-  });
-  if(!playing){toggle.textContent='재생';toggle.setAttribute('aria-label','재생')}
-  go(0); raf=requestAnimationFrame(loop);
+  scrub.value=t;tm.textContent=fmt(t)+' / '+fmt(DUR);
+}
+window.__render=render;window.__DUR=DUR;
+
+/* ── 재생 ── */
+const view=$('#view'),stage=$('#stage'),scrub=$('#scrub'),tm=$('#time'),btn=$('#play');
+function fit(){const k=view.clientWidth/1920;stage.style.transform=`scale(${k})`}
+addEventListener('resize',fit);fit();
+const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let playing=false,last=0;
+function loop(ts){if(playing){const dt=(ts-last)/1000;last=ts;let t=T+dt;if(t>=DUR){t=DUR;setPlay(false)}render(t)}requestAnimationFrame(loop)}
+function setPlay(v){playing=v;last=performance.now();if(v&&T>=DUR)render(0);btn.textContent=v?'일시정지':'재생';btn.setAttribute('aria-label',v?'일시정지':'재생')}
+btn.onclick=()=>setPlay(!playing);
+scrub.oninput=()=>render(+scrub.value);
+const CH=[['I 철학',8],['II 방법론',32],['III 분석·추론',65],['IV 도출',101],['V 재료',118],['시작',136]];
+const chs=$('#chaps');chs.appendChild(h(`<button data-t="0">OPEN</button>`));CH.forEach(c=>chs.appendChild(h(`<button data-t="${c[1]}">${c[0]}</button>`)));
+chs.onclick=e=>{const b=e.target.closest('button');if(b)render(+b.dataset.t)};
+addEventListener('keydown',e=>{if(e.key===' '&&e.target===document.body){e.preventDefault();setPlay(!playing)}else if(e.key==='ArrowRight'){render(Math.min(DUR,T+5))}else if(e.key==='ArrowLeft'){render(Math.max(0,T-5))}});
+if(location.hash==='#render'){document.body.classList.add('render');stage.style.transform='none'}
+/* 첫 프레임: 로고가 선 상태(정지 화면에서도 읽히게) */
+render(reduce?7:6.6);
+if(!reduce&&location.hash!=='#render'){render(0);setPlay(true)}
+requestAnimationFrame(loop);
 })();
 </script>
 </body></html>
