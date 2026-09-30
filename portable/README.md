@@ -71,7 +71,7 @@ ChatGPT Skills와 Codex는 Claude와 같은 **SKILL.md 표준(Agent Skills)**을
 
 > **"더프롬처럼 만들어줘"만으로는 아무것도 나오지 않습니다.** 지침에 브리프 게이트가 들어 있어서, 필수 항목(★1 무엇을 · ★2 누구에게 · ★3 핵심 순간)이 비면 AI는 질문부터 합니다. 이것이 정상 동작입니다.
 >
-> 브리프는 `knowledge/brief-template.md` — 항목마다 **왜 필요한지, 좋은 예, 나쁜 예**가 있습니다. 5분만 써도 결과가 달라집니다.
+> 브리프는 저장소의 **`tools/brief-editor.html`**(브라우저로 열어 쓰고 .md 저장)로 쓰거나, `knowledge/brief-template.md` 양식을 채웁니다. 만든 .md를 대화에 첨부하세요.
 
 ```
 [브리프 붙여넣기 — ★1~★6을 채운 것]

@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>브리프 편집기 — thefrom-ux</title>
+<!--
+  thefrom-ux 브리프 편집기
+  - 브라우저로 이 파일을 열면 바로 쓸 수 있다 (설치·서버 불필요, 인터넷 없이도 동작)
+  - 쓰는 동안 이 브라우저에 자동 저장된다
+  - [.md 저장]으로 브리프 파일을 내려받아 Claude·ChatGPT·Gemini에 첨부하거나, 저장소 briefs/ 폴더에 커밋한다
+  - [불러오기]로 이 편집기가 만든 .md를 다시 열어 고칠 수 있다
+  항목과 규칙은 method/1_PIPELINE_실행절차.md S0 "브리프 게이트"와 templates/brief.md를 따른다.
+-->
+<style>
+:root{
+  --bg:#F4F5F2; --panel:#FFFFFF; --fg:#151515; --sub:#62655F; --line:#DADCD6; --soft:#EEF0EC;
+  --acc:#338F74; --warn:#B8541F; --warnbg:#FCEFE6; --gate:#FFD200; --err:#C4392F;
+  --sans:"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+  --mono:ui-monospace,"SFMono-Regular",Consolas,"D2Coding",monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{--bg:#131413;--panel:#1B1C1B;--fg:#EDEDEA;--sub:#A2A59F;--line:#333532;--soft:#232522;--acc:#5BBF9F;--warn:#E8925E;--warnbg:#33251C;--gate:#FFD200;--err:#EB6B61;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.55}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+@media (max-width:600px){header.top{position:static}}
+.topin{max-width:1440px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brand{font-weight:800;letter-spacing:-.01em;margin-right:auto}
+.brand small{font-weight:400;color:var(--sub);margin-left:8px}
+button,.btn{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:8px;padding:8px 14px;cursor:pointer;min-height:38px}
+button.primary{background:var(--fg);color:var(--bg);border-color:var(--fg);font-weight:700}
+button:focus-visible,input:focus-visible,textarea:focus-visible,label.chip:focus-within{outline:2px solid var(--acc);outline-offset:2px}
+.saved{font-size:12px;color:var(--sub);min-width:120px;text-align:right}
+
+main{max-width:1440px;margin:0 auto;padding:20px 16px 60px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:980px){main{grid-template-columns:minmax(0,1fr)}}
+
+.intro{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:16px}
+.intro b{font-weight:800}
+.intro p{margin:0 0 6px}.intro p:last-child{margin:0;color:var(--sub);font-size:14px}
+
+section.item{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:14px}
+section.item h2{margin:0;font-size:18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.star{font-family:var(--mono);font-size:13px;background:var(--gate);color:#111;border-radius:4px;padding:1px 7px;font-weight:700}
+.opt{font-family:var(--mono);font-size:13px;background:var(--soft);color:var(--sub);border-radius:4px;padding:1px 7px}
+.state{margin-left:auto;font-size:12px;font-weight:700;border-radius:99px;padding:2px 10px}
+.state.ok{background:color-mix(in srgb,var(--acc) 16%,transparent);color:var(--acc)}
+.state.miss{background:color-mix(in srgb,var(--err) 14%,transparent);color:var(--err)}
+.state.vague{background:var(--warnbg);color:var(--warn)}
+.state.assume{background:var(--soft);color:var(--sub)}
+.why{color:var(--sub);font-size:14px;margin:6px 0 12px}
+details.ex{font-size:13px;color:var(--sub);margin:-4px 0 12px}
+details.ex summary{cursor:pointer;width:max-content}
+details.ex p{margin:6px 0 0}
+.good{color:var(--acc)}.bad{color:var(--err)}
+.field{display:flex;flex-direction:column;gap:5px;margin-top:12px}
+.field label.lb{font-size:13px;font-weight:700}
+.field .hint{font-size:12px;color:var(--sub);font-weight:400;margin-left:6px}
+input[type=text],textarea{width:100%;font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 11px}
+textarea{min-height:64px;resize:vertical}
+.warnline{font-size:12px;color:var(--warn);min-height:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+label.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:13px;cursor:pointer;background:var(--bg)}
+label.chip input{margin:0;accent-color:var(--acc)}
+label.chip:has(input:checked){border-color:var(--acc);color:var(--acc);font-weight:700}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:600px){.row2{grid-template-columns:1fr}}
+
+aside{position:sticky;top:76px;display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 92px)}
+@media (max-width:980px){aside{position:static;max-height:none}}
+.gatebox{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.gatebox h3{margin:0 0 8px;font-size:15px;display:flex;align-items:center;gap:8px}
+.verdict{font-size:12px;font-weight:800;border-radius:99px;padding:2px 10px}
+.verdict.pass{background:var(--acc);color:#fff}.verdict.stop{background:var(--err);color:#fff}.verdict.part{background:var(--gate);color:#111}
+.gatelist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;font-size:13px}
+@media (max-width:600px){.gatelist{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.gatelist a{display:flex;gap:6px;align-items:center;text-decoration:none;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:0}
+.gatelist a span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--line)}
+.dot.ok{background:var(--acc)}.dot.miss{background:var(--err)}.dot.vague{background:var(--warn)}.dot.assume{background:var(--sub)}
+.gatemsg{font-size:13px;color:var(--sub);margin:8px 0 0}
+.preview{background:var(--panel);border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;min-height:0;flex:1}
+.preview .ph{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13px;font-weight:700}
+.preview .ph span{margin-left:auto;font-weight:400;color:var(--sub);font-family:var(--mono);font-size:12px}
+pre#md{margin:0;padding:14px;font-family:var(--mono);font-size:12.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word;overflow:auto;flex:1;min-height:320px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--fg);color:var(--bg);border-radius:99px;padding:9px 18px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<header class="top"><div class="topin">
+  <div class="brand">브리프 편집기 <small>thefrom-ux · 브리프 게이트 6항목</small></div>
+  <button id="bNew" type="button">새로 쓰기</button>
+  <button id="bExample" type="button">예시 채우기</button>
+  <label class="btn" for="fileIn" style="display:inline-flex;align-items:center">불러오기 (.md)</label>
+  <input id="fileIn" type="file" accept=".md,text/markdown,text/plain" class="hidden">
+  <button id="bCopy" type="button">복사</button>
+  <button id="bSave" type="button" class="primary">.md 저장</button>
+  <span class="saved" id="savedAt" aria-live="polite"></span>
+</div></header>
+
+<main>
+<div>
+  <div class="intro">
+    <p><b>"더프롬처럼 만들어줘"로는 시작되지 않습니다.</b> 이 스킬은 감각을 흉내 내지 않고 판단을 계산하고, 판단의 재료는 브리프입니다.</p>
+    <p><span class="star">★</span> 필수 6항목 중 <b>★1 무엇을 · ★2 누구에게 · ★3 핵심 순간</b>이 비면 스킬은 아무것도 만들지 않고 질문부터 합니다. ★4~6은 비우면 가정으로 진행합니다.</p>
+    <p>쓰는 동안 이 브라우저에 자동 저장됩니다. 끝나면 <b>.md 저장</b> → Claude·ChatGPT·Gemini에 첨부하거나 저장소 <code>briefs/</code>에 커밋하세요.</p>
+  </div>
+  <form id="f" autocomplete="off" onsubmit="return false"></form>
+</div>
+
+<aside>
+  <div class="gatebox">
+    <h3>브리프 게이트 <span class="verdict" id="verdict"></span></h3>
+    <div class="gatelist" id="gatelist"></div>
+    <p class="gatemsg" id="gatemsg"></p>
+  </div>
+  <div class="preview">
+    <div class="ph">미리보기 · 저장될 내용 <span id="fname"></span></div>
+    <pre id="md" tabindex="0" aria-label="마크다운 미리보기"></pre>
+  </div>
+</aside>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+"use strict";
+/* ── 항목 정의: templates/brief.md 와 같은 구조 ── */
+const VAGUE=["mz","트렌디","트렌드","예쁘","이쁘","깔끔","세련","감성","힙","고급스럽","모던하게","잘 나오","알아서","적당히","느낌있","임팩트","눈에 띄","심플하게","더프롬처럼","더프롬 스타일","좋게"];
+const SECTIONS=[
+ {id:"s1",star:1,title:"무엇을 — 서비스와 범위",
+  why:"범위가 없으면 스킬이 화면을 지어내고, 지어낸 화면에 재해석을 합니다.",
+  good:"토스 미니앱 성향 분석. 진입·결과·커뮤니티 3화면. 동의 → 8문항 → 결과 → 공개 승인 → 댓글",bad:"성향 테스트 앱",
+  fields:[
+   {id:"project",label:"프로젝트명",hint:"파일 이름에 쓰입니다",type:"text",ph:"예: 앱인토스 성향 분석",req:true},
+   {id:"service",label:"서비스 한 줄",type:"text",ph:"무엇을 하는 서비스인가",req:true},
+   {id:"scope",label:"이번에 만들 범위",hint:"화면 이름으로",type:"text",ph:"예: 진입·문항 / 결과 / 커뮤니티",req:true},
+   {id:"flow",label:"핵심 흐름",hint:"사용자가 처음부터 끝까지 하는 일",type:"area",ph:"예: 동의 → 문항 8개 → 결과 → 공개 승인 → 댓글"}]},
+ {id:"s2",star:2,title:"누구에게 — 타겟과 상황",
+  why:"타겟은 레이어 ①입니다. 조형의 경계(가독성 하한·정보 밀도·톤의 폭)를 정합니다.",
+  good:"토스를 매일 쓰는 20~30대. 송금·결제 사이 잠깐 들어옴. 성향 테스트는 여러 번 해봄",bad:"MZ세대",
+  fields:[
+   {id:"who",label:"누가",hint:"연령대 · 알게 되는 경로 · 비슷한 서비스 경험",type:"area",req:true},
+   {id:"when",label:"언제·어디서",hint:"어떤 순간에 여는가",type:"text",ph:"예: 송금 사이 1분, 퇴근길 지하철"},
+   {id:"device",label:"기기",type:"chips",multi:true,opts:["모바일","웹","태블릿","키오스크","기타"]}]},
+ {id:"s3",star:3,title:"핵심 순간 — 사용자가 얻고 싶은 것",
+  why:"레이어 ③(동기와 감정)입니다. 이 칸이 비면 결과는 컨셉 아이디어에 머뭅니다.",
+  good:"결과 화면. \"왜 이게 나야?\"를 납득하고 싶다. 흔한 결과지는 유형명과 캐릭터뿐이라 납득이 안 된다",bad:"결과가 예뻤으면",
+  fields:[
+   {id:"screen",label:"가장 중요한 화면 하나",hint:"이 서비스의 주인공 화면",type:"text",req:true},
+   {id:"want",label:"그 순간 사용자가 원하는 것",type:"chips",multi:true,opts:["이해하고 싶다","비교하고 싶다","자랑·공유하고 싶다","결정하고 싶다","기록하고 싶다"]},
+   {id:"wantText",label:"구체적으로",hint:"위 선택을 한두 문장으로",type:"area",req:true},
+   {id:"fail",label:"지금 그 순간이 실패하는 지점",hint:"알고 있다면",type:"area"}]},
+ {id:"s4",star:4,title:"브랜드 — 클라이언트(서비스)의 것",
+  why:"레이어 ②입니다. 비어 있어도 더프롬의 컬러·1U 형상으로 채우지 않습니다(N7). \"없음\"은 판단이고, 빈칸은 판단하지 않은 것입니다.",
+  fields:[
+   {id:"brandNone",label:"브랜드가 정해져 있지 않다 — 없음(새로 정함)",type:"check"},
+   {id:"brand",label:"브랜드 컬러·서체·톤",hint:"가이드 파일명이나 링크",type:"area"},
+   {id:"parent",label:"모기업·플랫폼 브랜드를 따르는가",type:"text",ph:"예: 토스 앱 안에서 이질감이 과하면 안 됨"}]},
+ {id:"s5",star:5,title:"제약 — 지킬 것, 금지, 재료",
+  why:"제약은 어디서 새로워질 수 있는지를 알려줍니다. 문항·데이터가 이미 있다면 반드시 첨부하세요 — 없으면 스킬이 지어냅니다.",
+  fields:[
+   {id:"must",label:"반드시 지킬 것",hint:"플랫폼 규격·검수·법적 고지·접근성",type:"area"},
+   {id:"never",label:"쓰면 안 되는 것",hint:"금지 표현·경쟁사 연상·특정 스타일",type:"area"},
+   {id:"material",label:"재료 — 함께 첨부할 것",hint:"문항, 데이터 구조, 기존 화면, 카피",type:"area"}]},
+ {id:"s6",star:6,title:"성공 기준 — 무엇이 되면 성공인가",
+  why:"성공 기준이 효익 지표의 출발점이고, 깊이가 비용을 정합니다. 기본은 C 게이트에서 멈춤입니다.",
+  good:"클라이언트가 \"다른 테스트와 다르다\"를 설명 없이 느낄 것. 이번엔 방향만",bad:"잘 나오면 됨",
+  fields:[
+   {id:"judge",label:"끝났을 때 누가 무엇을 판단하나",type:"text",ph:"예: 내부 방향 결정 / 클라이언트 PT / 개발 착수"},
+   {id:"success",label:"성공의 모습",hint:"관찰 가능한 문장으로",type:"area"},
+   {id:"depth",label:"이번에 원하는 깊이",type:"chips",multi:false,opts:["C 게이트까지 — 방향만","끝까지 — 완성 프로토타입"]}]},
+ {id:"s7",star:0,title:"비교 대상",why:"경쟁·유사 서비스 2~3개와 그중 닮고 싶지 않은 것. 링크·캡처가 있으면 반대 대상의 실례가 되어 검색 비용이 줄어듭니다.",
+  fields:[{id:"compare",label:"비교 대상",type:"area",ph:"예: 16Personalities, 푸망 — 결과 카드 한 장으로 끝나는 방식은 피하고 싶음"}]},
+ {id:"s8",star:0,title:"판정자",why:"G5 판정자는 이 프로젝트에 참여하지 않는 사내 3명입니다. 없으면 판정 키트까지만 만들고 판정은 보류됩니다.",
+  fields:[{id:"judges",label:"사내 비참여자 3명",type:"text",ph:"예: 디자인2팀 A, 기획팀 B, 개발팀 C"},{id:"externals",label:"외부 타겟 판정자",hint:"가능하면",type:"text"}]},
+ {id:"s9",star:0,title:"더 알려줄 것",why:"클라이언트의 성향, 지난 시안에서 거절된 이유, 절대 양보할 수 없는 한 가지.",
+  fields:[{id:"more",label:"메모",type:"area"}]}
+];
+const EXAMPLE={project:"앱인토스 성향 분석",service:"토스 미니앱 '성향 분석' — 토스 정보(성별·생년월일)와 문항으로 성향을 분석하고, 공개를 승인한 결과는 커뮤니티에서 댓글을 받는다",scope:"진입·문항 / 결과 / 커뮤니티 — 3화면",flow:"토스에서 성별·생년월일 제공 동의 → 8문항 → 결과 → 본인 승인 시 공개 → 댓글",
+ who:"토스를 매일 쓰는 20~30대. 성향 테스트 경험이 많다",when:"송금·결제 사이 1~2분 틈",device:["모바일"],
+ screen:"결과 화면",want:["이해하고 싶다","자랑·공유하고 싶다"],wantText:"\"왜 이 결과가 나야?\"를 납득하고 싶다. 친구에게 보여줄 한 장도 원한다",fail:"흔한 결과지는 유형명+캐릭터라 공유는 해도 납득은 안 된다",
+ brandNone:true,brand:"",parent:"토스 앱 안에서 이질감이 과하면 안 됨",
+ must:"생년월일은 공개 금지. 뒤로 가기·공유 등 익숙한 조작은 유지",never:"유형 라벨로 사람을 나누는 표현",material:"문항 8개 초안 (문항_v1.md 첨부)",
+ judge:"내부 방향 결정",success:"\"다른 테스트와 다르다\"를 설명 없이 느낄 것",depth:["C 게이트까지 — 방향만"],
+ compare:"16Personalities, 푸망 — 결과 카드 한 장으로 끝나는 방식은 피하고 싶음",judges:"디자인2팀 A, 기획팀 B, 개발팀 C",externals:"",more:""};
+
+/* ── 폼 만들기 ── */
+const form=document.getElementById('f');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+SECTIONS.forEach(sec=>{
+  const el=document.createElement('section');el.className='item';el.id=sec.id;
+  let h=`<h2>${sec.star?`<span class="star">★${sec.star}</span>`:`<span class="opt">권장</span>`} ${esc(sec.title)} <span class="state" data-state="${sec.id}"></span></h2><p class="why">${esc(sec.why)}</p>`;
+  if(sec.good) h+=`<details class="ex"><summary>좋은 예 · 나쁜 예</summary><p class="good">좋은 예 — ${esc(sec.good)}</p><p class="bad">나쁜 예 — ${esc(sec.bad)}</p></details>`;
+  sec.fields.forEach(fd=>{
+    const lb=`${esc(fd.label)}${fd.req?' <span class="star" style="font-size:10px">필수</span>':''}${fd.hint?`<span class="hint">${esc(fd.hint)}</span>`:''}`;
+    if(fd.type==='text') h+=`<div class="field"><label class="lb" for="${fd.id}">${lb}</label><input type="text" id="${fd.id}" name="${fd.id}" placeholder="${esc(fd.ph||'')}"><div class="warnline" data-warn="${fd.id}"></div></div>`;
+    else if(fd.type==='area') h+=`<div class="field"><label class="lb" for="${fd.id}">${lb}</label><textarea id="${fd.id}" name="${fd.id}" placeholder="${esc(fd.ph||'')}"></textarea><div class="warnline" data-warn="${fd.id}"></div></div>`;
+    else if(fd.type==='check') h+=`<div class="field"><label class="chip"><input type="checkbox" id="${fd.id}" name="${fd.id}"> ${esc(fd.label)}</label></div>`;
+    else if(fd.type==='chips') h+=`<div class="field"><span class="lb" style="font-size:13px;font-weight:700" id="lb-${fd.id}">${lb}</span><div class="chips" role="${fd.multi?'group':'radiogroup'}" aria-labelledby="lb-${fd.id}">${fd.opts.map((o,i)=>`<label class="chip"><input type="${fd.multi?'checkbox':'radio'}" name="${fd.id}" id="${fd.id}-${i}" value="${esc(o)}"> ${esc(o)}</label>`).join('')}</div></div>`;
+  });
+  el.innerHTML=h;form.appendChild(el);
+});
+
+/* ── 값 읽기/쓰기 ── */
+const FIELDS=SECTIONS.flatMap(s=>s.fields);
+function read(){const d={};FIELDS.forEach(fd=>{
+  if(fd.type==='chips')d[fd.id]=[...form.querySelectorAll(`input[name="${fd.id}"]:checked`)].map(i=>i.value);
+  else if(fd.type==='check')d[fd.id]=document.getElementById(fd.id).checked;
+  else d[fd.id]=document.getElementById(fd.id).value.trim();});return d}
+function write(d){FIELDS.forEach(fd=>{const v=d[fd.id];
+  if(fd.type==='chips')form.querySelectorAll(`input[name="${fd.id}"]`).forEach(i=>i.checked=Array.isArray(v)&&v.includes(i.value));
+  else if(fd.type==='check')document.getElementById(fd.id).checked=!!v;
+  else document.getElementById(fd.id).value=v||'';});update()}
+
+/* ── 게이트 판정 ── */
+const vagueHit=t=>{const s=(t||'').toLowerCase();return VAGUE.filter(w=>s.includes(w))};
+function assess(d){
+  const st={},warns={};
+  const shortOrVague=(id,min)=>{const v=d[id]||'';const hits=vagueHit(v);if(hits.length)warns[id]=`모호한 표현: "${hits.join('", "')}" — 전혀 다른 화면이 두 가지 이상 나올 수 있으면 모호합니다`;else if(v&&v.length<min)warns[id]=`짧습니다 — 읽고 화면이 하나로 좁혀지나요?`;return !!v};
+  const f1=[shortOrVague('project',2),shortOrVague('service',8),shortOrVague('scope',4)];shortOrVague('flow',6);
+  st.s1=f1.every(Boolean)?(['service','scope'].some(k=>warns[k])?'vague':'ok'):'miss';
+  const w2=shortOrVague('who',8);shortOrVague('when',4);st.s2=w2?(warns.who?'vague':'ok'):'miss';
+  const s3a=shortOrVague('screen',2),s3b=shortOrVague('wantText',8);shortOrVague('fail',4);
+  st.s3=(s3a&&s3b)?((warns.wantText||warns.screen)?'vague':'ok'):'miss';
+  shortOrVague('brand',4);st.s4=(d.brandNone||d.brand)?'ok':'assume';
+  ['must','never','material'].forEach(k=>shortOrVague(k,4));st.s5=(d.must||d.never||d.material)?'ok':'assume';
+  shortOrVague('success',6);st.s6=(d.success&&d.depth.length)?(warns.success?'vague':'ok'):'assume';
+  const opt=(id,keys)=>st[id]=keys.some(k=>d[k])?'ok':'empty';
+  opt('s7',['compare']);opt('s8',['judges','externals']);opt('s9',['more']);
+  return {st,warns};
+}
+const LBL={ok:'채움',miss:'비어 있음',vague:'모호함',assume:'가정으로 진행',empty:'선택'};
+
+/* ── 마크다운 ── */
+const line=(k,v)=>`| ${k} | ${String(v||'').replace(/\n+/g,' <br> ').replace(/\|/g,'\\|')} |`;
+function toMd(d,a){
+  const today=new Date();const ds=`${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,'0')}.${String(today.getDate()).padStart(2,'0')}`;
+  const g=gateVerdict(a);
+  const miss=['s1','s2','s3','s4','s5','s6'].filter(k=>a.st[k]!=='ok').map(k=>`★${k.slice(1)} ${LBL[a.st[k]]}`);
+  const L=[];
+  L.push(`# 브리프 — ${d.project||'(프로젝트명)'}`,'',`> thefrom-ux 브리프 · 작성 ${ds}`,`> 브리프 게이트: **${g.label}**${miss.length?' — '+miss.join(' · '):''}`,'');
+  L.push('## ★1. 무엇을 — 서비스와 범위','','| | |','|---|---|',line('서비스 한 줄',d.service),line('이번에 만들 범위',d.scope),line('핵심 흐름',d.flow),'');
+  L.push('## ★2. 누구에게 — 타겟과 상황','','| | |','|---|---|',line('누가',d.who),line('언제·어디서',d.when),line('기기',d.device.join(', ')),'');
+  L.push('## ★3. 핵심 순간 — 사용자가 얻고 싶은 것','','| | |','|---|---|',line('가장 중요한 화면',d.screen),line('그 순간 원하는 것',[d.want.join(', '),d.wantText].filter(Boolean).join(' — ')),line('지금 실패하는 지점',d.fail),'');
+  L.push('## ★4. 브랜드 — 클라이언트(서비스)의 것','','| | |','|---|---|',line('브랜드 컬러·서체·톤',d.brandNone?'없음 — 서비스 약속과 타겟에서 새로 정함'+(d.brand?' / '+d.brand:''):d.brand),line('모기업·플랫폼 브랜드',d.parent),'');
+  L.push('## ★5. 제약 — 지킬 것, 금지, 재료','','| | |','|---|---|',line('반드시 지킬 것',d.must),line('쓰면 안 되는 것',d.never),line('재료 (첨부)',d.material),'');
+  L.push('## ★6. 성공 기준','','| | |','|---|---|',line('누가 무엇을 판단',d.judge),line('성공의 모습',d.success),line('깊이',d.depth.join('')||'C 게이트까지 — 방향만 (기본)'),'');
+  if(d.compare){L.push('## 7. 비교 대상','',d.compare,'')}
+  if(d.judges||d.externals){L.push('## 8. 판정자','',`- 사내 비참여자: ${d.judges||'미정'}`,`- 외부 타겟: ${d.externals||'미정'}`,'')}
+  if(d.more){L.push('## 9. 더 알려줄 것','',d.more,'')}
+  L.push('---','','더프롬 방식으로 진행해줘. 브리프 게이트부터 확인하고, 부족한 항목은 질문해줘.','');
+  L.push(`<!-- brief-data ${JSON.stringify(d)} -->`,'');
+  return L.join('\n');
+}
+function gateVerdict(a){
+  const core=['s1','s2','s3'].map(k=>a.st[k]);
+  if(core.includes('miss'))return{cls:'stop',label:'멈춤 — ★1~3을 채워야 시작합니다'};
+  if(core.includes('vague'))return{cls:'part',label:'질문부터 — 모호한 항목이 있습니다'};
+  if(['s4','s5','s6'].some(k=>a.st[k]!=='ok'))return{cls:'part',label:'진행 가능 — 일부는 가정으로'};
+  return{cls:'pass',label:'통과'};
+}
+function fileName(d){const n=(d.project||'브리프').replace(/[\\/:*?"<>|]+/g,'').replace(/\s+/g,'_').slice(0,40);const t=new Date();return `브리프_${n}_${t.getFullYear()}${String(t.getMonth()+1).padStart(2,'0')}${String(t.getDate()).padStart(2,'0')}.md`}
+
+/* ── 갱신 ── */
+const mdEl=document.getElementById('md'),gl=document.getElementById('gatelist'),vd=document.getElementById('verdict'),gm=document.getElementById('gatemsg'),fn=document.getElementById('fname'),sv=document.getElementById('savedAt');
+let current='';
+function update(){
+  const d=read(),a=assess(d);
+  document.querySelectorAll('[data-state]').forEach(e=>{const s=a.st[e.dataset.state];e.className='state '+(s==='empty'?'':s);e.textContent=s==='empty'?'':LBL[s]});
+  document.querySelectorAll('[data-warn]').forEach(e=>{e.textContent=a.warns[e.dataset.warn]||''});
+  const g=gateVerdict(a);vd.className='verdict '+g.cls;vd.textContent=g.cls==='pass'?'통과':g.cls==='stop'?'멈춤':'부분';
+  gl.innerHTML=SECTIONS.slice(0,6).map(s=>`<a href="#${s.id}"><i class="dot ${a.st[s.id]}"></i><span>★${s.star} ${esc(s.title.split(' — ')[0])} · ${LBL[a.st[s.id]]}</span></a>`).join('');
+  gm.textContent=g.label+'.';
+  current=toMd(d,a);mdEl.textContent=current.replace(/<!-- brief-data[\s\S]*?-->\n?/,'');fn.textContent=fileName(d);
+  try{localStorage.setItem('thefrom-brief-draft',JSON.stringify(d));const t=new Date();sv.textContent=`자동 저장됨 ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`}catch(e){sv.textContent='자동 저장 꺼짐'}
+}
+form.addEventListener('input',update);form.addEventListener('change',update);
+
+/* ── 버튼 ── */
+const toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),2200)};
+document.getElementById('bSave').onclick=()=>{
+  const d=read();const blob=new Blob([current],{type:'text/markdown;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fileName(d);document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
+  toast(`${fileName(d)} 저장됨`)};
+document.getElementById('bCopy').onclick=async()=>{try{await navigator.clipboard.writeText(current);toast('복사됨 — AI 대화창에 붙여넣으세요')}catch(e){const r=document.createRange();r.selectNodeContents(mdEl);const s=getSelection();s.removeAllRanges();s.addRange(r);toast('선택됨 — Ctrl+C로 복사하세요')}};
+document.getElementById('bExample').onclick=()=>{write(EXAMPLE);toast('예시로 채웠습니다')};
+let newArmed=false;
+document.getElementById('bNew').onclick=e=>{if(!newArmed){newArmed=true;e.target.textContent='한 번 더 누르면 비웁니다';setTimeout(()=>{newArmed=false;e.target.textContent='새로 쓰기'},2500);return}
+  newArmed=false;e.target.textContent='새로 쓰기';write({device:[],want:[],depth:[]});toast('새 브리프')};
+document.getElementById('fileIn').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const m=String(r.result).match(/<!-- brief-data ([\s\S]*?) -->/);
+  if(!m){toast('이 편집기로 만든 .md만 불러올 수 있습니다');return}try{write(JSON.parse(m[1]));toast(`${f.name} 불러옴`)}catch(err){toast('파일을 읽지 못했습니다')}};r.readAsText(f,'utf-8');e.target.value=''};
+
+/* ── 시작: 저장된 초안 → 없으면 빈 양식 ── */
+let draft=null;try{draft=JSON.parse(localStorage.getItem('thefrom-brief-draft')||'null')}catch(e){}
+write(draft||{device:[],want:[],depth:[]});
+})();
+</script>
+</body>
+</html>
