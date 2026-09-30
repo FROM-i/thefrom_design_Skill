@@ -1,47 +1,34 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>나로부터 — thefrom-ux</title>
+<!doctype html><html><head><meta charset="utf-8">
+<title>익숙함의 새로움 — thefrom-ux</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&family=Noto+Serif+KR:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-</head><body style="margin:0">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Noto+Serif+KR:wght@400;700&display=swap">
 <style>
-/* 필름: 1920×1080 무대 하나를 화면에 맞춰 축소. 모든 움직임은 시간 t의 함수 — 같은 t면 같은 프레임(영상 렌더용). */
-/* 더프롬 자사 산출물: 검정 무대 · 흰 글 · 노랑은 "빛/출구", 초록·빨강·파랑은 신호. */
+/* 1920×1080 무대 · 장면 10개 · 한 장면에 생각 하나. 모든 움직임은 시간 t의 함수(영상 렌더와 같은 프레임). */
 :root{
-  --void:#0B0B0B; --ink:#F2F2EF; --dim:#8C8C88; --faint:#2A2A28; --line:#3A3A37;
+  --void:#0B0B0B; --ink:#F2F2EF; --dim:#8E8E8A; --faint:#262624; --line:#3A3A37;
   --y:#FFD200; --g:#338F74; --r:#E85E53; --b:#595EA6;
   --sans:"Noto Sans KR","Noto Sans CJK KR","Apple SD Gothic Neo",system-ui,sans-serif;
   --serif:"Noto Serif KR","Noto Serif CJK KR","AppleMyungjo",serif;
-  --mono:"IBM Plex Mono","DejaVu Sans Mono",ui-monospace,monospace;
   color-scheme:dark;
 }
-html,body{background:#050505;color:var(--ink);height:100%}
+html,body{background:#050505;color:var(--ink)}
 body{font-family:var(--sans)}
 .wrap{max-width:1400px;margin:0 auto;padding-inline:16px;padding-block:20px 32px;display:flex;flex-direction:column;gap:12px}
 .view{position:relative;width:100%;aspect-ratio:16/9;background:var(--void);overflow:hidden;border-radius:10px}
 .stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;background:var(--void);overflow:hidden}
 .sc{position:absolute;inset:0;opacity:0;visibility:hidden}
-[data-fx]{opacity:0;will-change:transform,opacity}
-
-/* 타이포 */
-.chap{position:absolute;left:96px;top:72px;font-family:var(--mono);font-size:22px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
-.chap b{color:var(--ink);font-weight:500}
-.hl{font-family:var(--sans);font-weight:900;letter-spacing:-.025em;line-height:1.06}
-.q{font-family:var(--serif);font-weight:400;line-height:1.35;letter-spacing:-.01em}
-.mono{font-family:var(--mono)}
-.dim{color:var(--dim)}
-.y{color:var(--y)}.g{color:var(--g)}.r{color:var(--r)}.bl{color:var(--b)}
+[data-fx]{opacity:0}
 .abs{position:absolute}
-
-/* 컨트롤 */
+.hl{font-weight:900;letter-spacing:-.03em;line-height:1.12}
+.sub{font-family:var(--serif);color:#CFCFCB;line-height:1.45}
+.y{color:var(--y)}.dim{color:var(--dim)}.g{color:var(--g)}.r{color:var(--r)}
+.num{position:absolute;left:120px;top:96px;font-size:26px;color:var(--dim);letter-spacing:.2em}
+.center{left:0;right:0;text-align:center}
 .ctrl{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .ctrl button{font:inherit;font-size:14px;border:1px solid #555;background:#141414;color:var(--ink);border-radius:99px;padding:8px 16px;min-height:40px;cursor:pointer}
 .ctrl button:focus-visible,.scrub:focus-visible{outline:2px solid var(--y);outline-offset:2px}
-.scrubwrap{flex:1;min-width:200px;display:flex;flex-direction:column;gap:6px}
-.scrub{width:100%;accent-color:var(--y)}
-.chaps{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.06em}
-.chaps button{border:0;background:none;color:inherit;font:inherit;padding:0;cursor:pointer;min-height:0}
-.chaps button:hover{color:var(--ink)}
-.time{font-family:var(--mono);font-size:13px;color:var(--dim);font-variant-numeric:tabular-nums;min-width:96px;text-align:right}
+.scrub{flex:1;min-width:180px;accent-color:var(--y)}
+.time{font-size:13px;color:var(--dim);font-variant-numeric:tabular-nums;min-width:90px;text-align:right}
 body.render .wrap{padding:0;max-width:none}
 body.render .ctrl{display:none}
 body.render .view{border-radius:0;width:1920px;height:1080px;aspect-ratio:auto}
@@ -50,483 +37,231 @@ body.render .view{border-radius:0;width:1920px;height:1080px;aspect-ratio:auto}
 <div class="wrap">
 <div class="view" id="view"><div class="stage" id="stage">
 
-<!-- ───────── 0 · OPEN ───────── -->
-<section class="sc" data-s="0" data-e="8">
-  <div class="abs" id="sq" style="left:912px;top:492px;width:96px;height:96px;background:var(--ink)"></div>
-  <div class="abs" id="bars" style="left:776px;top:420px;display:flex;flex-direction:column;gap:9px">
-    <i style="display:block;width:288px;height:96px;background:var(--ink);transform-origin:left" data-fx="grow" data-at="4.2" data-dur=".9"></i>
-    <i style="display:block;width:192px;height:96px;background:var(--ink);transform-origin:left" data-fx="grow" data-at="4.5" data-dur=".9"></i>
-    <i style="display:block;width:96px;height:96px;background:var(--y);transform-origin:left" data-fx="grow" data-at="4.8" data-dur=".9"></i>
+<!-- 0 질문 -->
+<section class="sc" data-s="0" data-e="6.5">
+  <div class="abs" style="left:560px;top:360px;width:800px;height:16px;border-radius:8px;background:var(--faint);overflow:hidden" data-fx="fade" data-at=".2">
+    <div id="q-bar" style="height:100%;width:0;background:var(--ink);border-radius:8px"></div>
   </div>
-  <p class="abs q" style="left:0;right:0;top:640px;text-align:center;font-size:54px;margin:0" data-fx="up" data-at="1.2" data-out="4">모든 Creative는 <span class="y">나로부터</span> 시작된다.</p>
-  <p class="abs mono dim" style="left:0;right:0;top:730px;text-align:center;font-size:22px;letter-spacing:.3em;margin:0" data-fx="fade" data-at="2" data-out="4">THE FROM</p>
-  <div class="abs" style="left:1120px;top:436px">
-    <div class="hl" style="font-size:112px" data-fx="left" data-at="5.4">thefrom-ux</div>
-    <div class="q dim" style="font-size:36px;margin-top:16px" data-fx="left" data-at="5.9">더프롬의 <span style="color:var(--ink)">판단</span>을 계산하는 스킬</div>
+  <div class="abs center hl" style="top:480px;font-size:92px" data-fx="up" data-at="1">익숙한데, <span class="y">처음 보는 것 같은</span> 화면.</div>
+  <div class="abs center sub" style="top:640px;font-size:44px" data-fx="up" data-at="2.4">어떻게 만들 수 있을까?</div>
+</section>
+
+<!-- 1 THE FROM -->
+<section class="sc" data-s="6.5" data-e="13.5">
+  <div class="num">1 · 철학</div>
+  <div class="abs" style="left:300px;top:330px;display:flex;flex-direction:column;gap:10px">
+    <i style="display:block;width:300px;height:100px;background:var(--ink);transform-origin:left" data-fx="grow" data-at=".4"></i>
+    <i style="display:block;width:200px;height:100px;background:var(--ink);transform-origin:left" data-fx="grow" data-at=".7"></i>
+    <i style="display:block;width:100px;height:100px;background:var(--y);transform-origin:left" data-fx="grow" data-at="1"></i>
+  </div>
+  <div class="abs" style="left:760px;top:350px;width:1000px">
+    <div class="hl" style="font-size:96px" data-fx="left" data-at="1.4">THE FROM,<br><span class="y">나로부터.</span></div>
+    <div class="sub" style="font-size:40px;margin-top:40px" data-fx="up" data-at="2.8">레퍼런스나 트렌드가 아니라,<br>판단하는 사람에게서 시작한다.</div>
   </div>
 </section>
 
-<!-- ───────── I-1 · 1U ───────── -->
-<section class="sc" data-s="8" data-e="17">
-  <div class="chap"><b>I</b> · 철학 — 1U</div>
-  <svg class="abs" style="left:0;top:0" width="1920" height="1080" id="grid1u">
-  </svg>
-  <div class="abs" style="left:216px;top:300px;width:96px;height:96px;background:var(--ink)" data-fx="scale" data-at=".2"></div>
-  <div class="abs mono dim" style="left:216px;top:410px;font-size:20px" data-fx="fade" data-at=".5">1U</div>
-  <div class="abs" id="derive" style="left:420px;top:300px;display:flex;flex-direction:column;gap:22px"></div>
-  <div class="abs" style="left:216px;top:720px;width:1500px">
-    <div class="hl" style="font-size:84px" data-fx="up" data-at="1">1U는 값이 아니라 <span class="y">방법</span>이다.</div>
-    <div class="q dim" style="font-size:36px;margin-top:22px" data-fx="up" data-at="2.6">하나의 단위에서 모든 치수가 파생된다 — 그리고 그 뼈대는 <span style="color:var(--ink)">보이지 않는다.</span></div>
+<!-- 2 1U -->
+<section class="sc" data-s="13.5" data-e="20.5">
+  <div class="num">1 · 철학</div>
+  <svg class="abs" style="left:0;top:0" width="1920" height="1080" id="grid"></svg>
+  <div class="abs" id="u" style="left:300px;top:300px;width:100px;height:100px;background:var(--y)" data-fx="scale" data-at=".2"></div>
+  <div class="abs" style="left:300px;top:420px;font-size:28px;font-weight:700" data-fx="fade" data-at=".4">1U</div>
+  <div class="abs" id="ticks" style="left:480px;top:300px;display:flex;align-items:flex-end;gap:28px"></div>
+  <div class="abs" style="left:300px;top:640px;width:1400px">
+    <div class="hl" style="font-size:84px" data-fx="up" data-at="1.6">한 칸에서 <span class="y">모든 치수</span>가 나온다.</div>
+    <div class="sub" style="font-size:40px;margin-top:28px" data-fx="up" data-at="3.4">그리고 그 뼈대는 화면에 드러나지 않는다.</div>
   </div>
 </section>
 
-<!-- ───────── I-2 · 자메뷰 ───────── -->
-<section class="sc" data-s="17" data-e="26">
-  <div class="chap"><b>I</b> · 철학 — 자메뷰</div>
-  <div class="abs" style="left:216px;top:210px;display:flex;gap:120px">
-    <div data-fx="up" data-at=".2"><div class="mono dim" style="font-size:22px;letter-spacing:.1em">DÉJÀ VU</div><div class="q" style="font-size:44px;margin-top:10px">낯선 것이 익숙하게</div></div>
-    <div data-fx="up" data-at=".8"><div class="mono y" style="font-size:22px;letter-spacing:.1em">JAMAIS VU</div><div class="q" style="font-size:44px;margin-top:10px">익숙한 것이 처음 보는 것처럼</div></div>
+<!-- 3 자메뷰 -->
+<section class="sc" data-s="20.5" data-e="27.5">
+  <div class="num">1 · 철학</div>
+  <div class="abs" style="left:300px;top:300px;display:grid;grid-template-columns:1fr 1fr;gap:120px;width:1320px">
+    <div data-fx="up" data-at=".3"><div class="dim" style="font-size:30px;letter-spacing:.1em">데자뷰</div><div class="hl" style="font-size:64px;margin-top:12px;color:#9a9a96">낯선 것이<br>익숙하게</div></div>
+    <div data-fx="up" data-at="1.1"><div class="y" style="font-size:30px;letter-spacing:.1em">자메뷰</div><div class="hl" style="font-size:64px;margin-top:12px">익숙한 것이<br><span class="y">처음 보는 것처럼</span></div></div>
   </div>
-  <!-- 익숙한 진행 바 → 새 해석 -->
-  <div class="abs" style="left:216px;top:430px;width:1488px">
-    <div class="mono dim" style="font-size:20px" data-fx="fade" data-at="1.4">누구나 아는 진행 바 — 구조는 그대로</div>
-    <div style="position:relative;height:14px;background:var(--faint);border-radius:7px;margin-top:22px;overflow:hidden" data-fx="fade" data-at="1.6">
-      <div id="plainbar" style="position:absolute;left:0;top:0;bottom:0;width:0;background:var(--ink);border-radius:7px"></div>
+  <div class="abs sub" style="left:300px;top:700px;font-size:42px;width:1400px" data-fx="up" data-at="2.6">낯선 구조를 주지 않는다.<br><span style="color:var(--ink)">익숙한 것을 새로 보이게 한다.</span></div>
+</section>
+
+<!-- 4 두 재료 -->
+<section class="sc" data-s="27.5" data-e="35">
+  <div class="num">2 · 두 재료</div>
+  <div class="abs" style="left:160px;top:200px;width:1600px;display:grid;grid-template-columns:1fr 1fr;gap:80px">
+    <div data-fx="up" data-at=".3">
+      <div id="ismcloud" style="height:300px;position:relative"></div>
+      <div class="hl" style="font-size:64px;margin-top:30px">사조 16</div>
+      <div class="hl y" style="font-size:52px;margin-top:6px">관성과 예술성</div>
+      <div class="sub" style="font-size:32px;margin-top:20px">무엇이 익숙한지,<br>어디서 새로워질 수 있는지</div>
     </div>
-    <div id="segs" style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:40px"></div>
-  </div>
-  <div class="abs" style="left:216px;top:790px;width:1500px">
-    <div class="hl" style="font-size:72px" data-fx="up" data-at="5">관성은 <u style="text-underline-offset:12px">구조</u>에서 지키고,<br>새로움은 <span class="y">해석</span>에서 만든다.</div>
-  </div>
-</section>
-
-<!-- ───────── I-3 · 노랑 / 철학의 층위 ───────── -->
-<section class="sc" data-s="26" data-e="32">
-  <div class="chap"><b>I</b> · 철학 — 태도</div>
-  <div class="abs" id="dots" style="left:216px;top:250px;display:flex;gap:26px"></div>
-  <div class="abs" style="left:216px;top:400px;width:1500px">
-    <div class="q" style="font-size:52px" data-fx="up" data-at=".6">노랑은 팔레트가 아니라 <span class="y">태도</span> — 아이부터 노년까지, 전 세대.</div>
-    <div class="hl" style="font-size:76px;margin-top:120px" data-fx="up" data-at="2.4">철학은 <span class="y">판단의 방법</span>이다.</div>
-    <div class="hl dim" style="font-size:76px;margin-top:8px" data-fx="up" data-at="3.2">결과물의 소재가 아니다.</div>
-  </div>
-</section>
-
-<!-- ───────── II-1 · AIRPLANE ───────── -->
-<section class="sc" data-s="32" data-e="47">
-  <div class="chap"><b>II</b> · 방법론 — Airplane effect</div>
-  <div class="abs" style="left:96px;top:130px">
-    <div class="hl" style="font-size:66px" data-fx="up" data-at=".2">경계 없이 여행하되, <span class="y">원리만</span> 가져온다.</div>
-  </div>
-  <svg class="abs" style="left:0;top:0" width="1920" height="1080" id="flight"></svg>
-  <div class="abs" id="ismcard" style="left:96px;top:760px;width:1728px;display:grid;grid-template-columns:420px 1fr 1fr;gap:40px;align-items:start"></div>
-</section>
-
-<!-- ───────── II-2 · 반대 대상 ───────── -->
-<section class="sc" data-s="47" data-e="54">
-  <div class="chap"><b>II</b> · 방법론 — 반대 대상</div>
-  <div class="abs" style="left:216px;top:220px;width:1500px">
-    <div class="hl" style="font-size:64px" data-fx="up" data-at=".2">무엇에 반대하는지 먼저 적는다.</div>
-    <div class="mono" style="font-size:40px;margin-top:70px;display:flex;flex-wrap:wrap;gap:18px;align-items:center">
-      <span data-fx="pop" data-at="1" style="border:2px solid var(--ink);padding:8px 18px">층위</span><span class="dim" data-fx="fade" data-at="1.2">·</span>
-      <span data-fx="pop" data-at="1.4" style="border:2px solid var(--ink);padding:8px 18px">지배 규범</span><span class="y" data-fx="fade" data-at="1.6">→</span>
-      <span data-fx="pop" data-at="1.8" style="border:2px solid var(--y);color:var(--y);padding:8px 18px">어기는 지점</span><span class="dim" data-fx="fade" data-at="2">·</span>
-      <span data-fx="pop" data-at="2.2" style="border:2px solid var(--ink);padding:8px 18px">강도</span>
-    </div>
-    <div class="mono dim" style="font-size:26px;margin-top:40px;display:flex;gap:28px;flex-wrap:wrap" data-fx="fade" data-at="2.8"><span>CAT 업계 관습</span><span>COMP 경쟁사</span><span>SELF 우리 과거</span><span>PLAT 플랫폼</span><span>ISM 사조</span><span>EXP 타겟의 기대</span><span style="color:var(--ink)">· 이탈 · 역전 · 거부</span></div>
-    <div class="q" style="font-size:46px;margin-top:90px" data-fx="up" data-at="3.8">실례 2건이 없으면 반대하지 않는다 — <span class="r">상상 속의 적</span>은 공격하지 않는다.</div>
-  </div>
-</section>
-
-<!-- ───────── II-3 · TUNNEL ───────── -->
-<section class="sc" data-s="54" data-e="65">
-  <div class="chap"><b>II</b> · 방법론 — Tunnel effect</div>
-  <svg class="abs" style="left:0;top:0" width="1920" height="1080" id="tunnel"></svg>
-  <div class="abs" style="left:96px;top:130px">
-    <div class="hl" style="font-size:66px" data-fx="up" data-at=".2">레이어가 겹칠수록 <span class="y">밝아진다.</span></div>
-  </div>
-  <div class="abs" id="layers" style="left:96px;top:850px;display:flex;gap:28px"></div>
-</section>
-
-<!-- ───────── III-1 · 패턴 재해석 ───────── -->
-<section class="sc" data-s="65" data-e="76">
-  <div class="chap"><b>III</b> · 분석과 추론 — 패턴 재해석</div>
-  <div class="abs" style="left:96px;top:130px"><div class="hl" style="font-size:62px" data-fx="up" data-at=".2">패턴을 <span class="y">원래 하려던 일</span>로 되돌린다.</div></div>
-  <div class="abs" style="left:96px;top:300px;width:1728px;display:grid;grid-template-columns:380px 80px 380px 80px 1fr;align-items:center;gap:0">
-    <!-- 통상 -->
-    <div data-fx="up" data-at=".8" style="border:2px solid var(--line);border-radius:18px;padding:28px;height:360px;display:flex;flex-direction:column;gap:16px">
-      <div class="mono dim" style="font-size:18px">PAT-RESULT · 통상적 해석 · CAT</div>
-      <div style="width:120px;height:120px;border-radius:50%;background:var(--faint);align-self:center;margin-top:10px"></div>
-      <div class="hl" style="font-size:36px;text-align:center">"용감한 탐험가"</div>
-      <div class="dim" style="font-size:22px;text-align:center">유형명 + 캐릭터 + 해시태그</div>
-    </div>
-    <div class="y mono" style="font-size:44px;text-align:center" data-fx="fade" data-at="1.8">→</div>
-    <div data-fx="up" data-at="2" style="border:2px solid var(--y);border-radius:18px;padding:28px;height:360px;display:flex;flex-direction:column;justify-content:center;gap:18px">
-      <div class="mono y" style="font-size:18px">원래 무엇을 하려던 것인가</div>
-      <div class="q" style="font-size:40px">"나를 이해한다"</div>
-      <div class="dim" style="font-size:22px;line-height:1.5">기능은 지키고,<br>메타포를 통과시켜 다시 표현한다</div>
-    </div>
-    <div class="y mono" style="font-size:44px;text-align:center" data-fx="fade" data-at="3.2">→</div>
-    <div style="display:flex;flex-direction:column;gap:18px">
-      <div data-fx="left" data-at="3.4" style="border-left:6px solid var(--ink);padding:14px 24px"><div class="mono dim" style="font-size:18px">비주얼</div><div style="font-size:30px;margin-top:6px">한 문장 + 네 영역 위의 내 위치</div></div>
-      <div data-fx="left" data-at="4" style="border-left:6px solid var(--g);padding:14px 24px"><div class="mono g" style="font-size:18px">작동</div><div style="font-size:30px;margin-top:6px">"왜 이 문장인가" — 근거가 된 내 답을 펼친다</div></div>
-      <div data-fx="left" data-at="4.6" style="border-left:6px solid var(--y);padding:14px 24px"><div class="mono y" style="font-size:18px">사용자가 얻는 것</div><div style="font-size:30px;margin-top:6px">이 결과가 왜 나인지 납득한다</div></div>
-    </div>
-  </div>
-  <div class="abs q dim" style="left:96px;top:760px;font-size:36px" data-fx="up" data-at="6">메타포는 프로젝트에 <span style="color:var(--ink)">하나</span>. 화면마다 달라지는 것은 재해석이다.</div>
-</section>
-
-<!-- ───────── III-2 · 효익 시각화 ───────── -->
-<section class="sc" data-s="76" data-e="84">
-  <div class="chap"><b>III</b> · 분석과 추론 — 효익 시각화</div>
-  <div class="abs" style="left:96px;top:130px"><div class="hl" style="font-size:62px" data-fx="up" data-at=".2">메타포는 <span class="dim">톤</span>을, 사용자의 일은 <span class="y">형식</span>을 정한다.</div></div>
-  <div class="abs" style="left:96px;top:290px;width:1728px;display:grid;grid-template-columns:repeat(4,1fr);gap:24px" id="chain"></div>
-  <div class="abs" style="left:96px;top:560px;width:1728px;height:360px;border:2px solid var(--line);border-radius:22px" data-fx="fade" data-at="2.2">
-    <svg width="1728" height="360" id="viz"></svg>
-  </div>
-</section>
-
-<!-- ───────── III-3 · 명분·효익 ───────── -->
-<section class="sc" data-s="84" data-e="90">
-  <div class="chap"><b>III</b> · 분석과 추론 — 명분과 효익</div>
-  <div class="abs" style="left:96px;top:130px"><div class="hl" style="font-size:62px" data-fx="up" data-at=".2">명분만 있고 효익이 없으면 <span class="r">개살구</span>.</div></div>
-  <div class="abs" style="left:96px;top:300px;width:1728px;display:grid;grid-template-columns:1fr 1fr;gap:48px">
-    <div data-fx="up" data-at=".7" style="position:relative;border:2px solid var(--line);border-radius:22px;padding:36px;height:520px">
-      <div class="mono dim" style="font-size:20px">A · 시스템 주도 — 1U가 형태를 정한다</div>
-      <div id="tilesA" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px"></div>
-      <div class="abs hl r" data-fx="stamp" data-at="2.4" style="right:36px;top:30px;font-size:54px;border:6px solid var(--r);padding:6px 24px;transform-origin:center">개살구</div>
-    </div>
-    <div data-fx="up" data-at="1.1" style="position:relative;border:2px solid var(--line);border-radius:22px;padding:36px;height:520px">
-      <div class="mono dim" style="font-size:20px">B · 경험 주도 — 방법론은 구조·포인트·디테일에</div>
-      <div class="hl" style="font-size:44px;margin-top:40px;line-height:1.25">혼자 있는 시간에 충전하고,<br>그때의 판단을 믿는 사람</div>
-      <svg width="820" height="170" id="tracksB" style="margin-top:28px"></svg>
-      <div class="abs hl g" data-fx="stamp" data-at="3" style="right:36px;top:30px;font-size:54px;border:6px solid var(--g);padding:6px 24px">효익 ✓</div>
+    <div data-fx="up" data-at="1.8">
+      <div style="height:300px;display:flex;align-items:flex-end;gap:22px">
+        <div style="width:120px;height:230px;background:#EDEDEA;color:#111;border-radius:6px;padding:16px;font-weight:900;font-size:22px">Lv.1<br><span style="font-weight:400;font-size:17px">원칙</span></div>
+        <div style="width:120px;height:270px;background:#EDEDEA;color:#111;border-radius:6px;padding:16px;font-weight:900;font-size:22px">Lv.2-1<br><span style="font-weight:400;font-size:17px">디테일</span></div>
+        <div style="width:120px;height:300px;background:var(--y);color:#111;border-radius:6px;padding:16px;font-weight:900;font-size:22px">Lv.2-2<br><span style="font-weight:400;font-size:17px">비주얼 시스템</span></div>
+      </div>
+      <div class="hl" style="font-size:64px;margin-top:30px">Knowhow Book</div>
+      <div class="hl y" style="font-size:52px;margin-top:6px">스킬과 테크닉</div>
+      <div class="sub" style="font-size:32px;margin-top:20px">그것을 어떻게<br>잘 만드는지</div>
     </div>
   </div>
 </section>
 
-<!-- ───────── III-4 · 노하우북 조형 판단 ───────── -->
-<section class="sc" data-s="90" data-e="101">
-  <div class="chap"><b>III</b> · 분석과 추론 — Knowhow Book의 눈</div>
-  <svg class="abs" style="left:0;top:0" width="1920" height="1080" id="wheel"></svg>
-  <div class="abs" style="left:1060px;top:250px;width:780px">
-    <div class="mono dim" style="font-size:20px" data-fx="fade" data-at="3.4">Lv.2-2 · Visual System</div>
-    <div class="hl" style="font-size:52px;margin-top:10px;line-height:1.2" data-fx="up" data-at="3.6">톤 앤 매너 =<br><span class="y">컬러</span> × <span class="y">무드</span> × <span class="y">비주얼</span> × <span class="y">타이포</span></div>
-    <div class="mono dim" style="font-size:20px;margin-top:70px" data-fx="fade" data-at="5.6">Lv.2-1 · Detail Expression</div>
-    <div class="hl" style="font-size:52px;margin-top:10px" data-fx="up" data-at="5.8">앵글 · 빛과 그림자 · 질감</div>
-    <div class="q dim" style="font-size:28px;margin-top:14px;line-height:1.45" data-fx="up" data-at="6.4">디테일은 요소를 많이 넣는 것이 아니라,<br>어떻게 보여주고 드러내고 느끼게 하는가에서 결정된다.</div>
-    <div class="mono y" style="font-size:24px;margin-top:40px" data-fx="fade" data-at="8">→ G7 조형 완성도의 판정 기준</div>
+<!-- 5 에어플레인 -->
+<section class="sc" data-s="35" data-e="44">
+  <div class="num">3 · 에어플레인 이펙트</div>
+  <div class="abs" style="left:160px;top:170px"><div class="hl" style="font-size:80px" data-fx="up" data-at=".2">✈ 여행하되, <span class="y">원리만</span> 가져온다.</div></div>
+  <svg class="abs" style="left:0;top:0" width="1920" height="1080" id="fly"></svg>
+  <div class="abs" id="bh" style="left:160px;top:700px;width:1600px;display:grid;grid-template-columns:360px 1fr 1fr;gap:50px;align-items:start;opacity:0">
+    <div class="hl" style="font-size:60px">바우하우스</div>
+    <div style="border-left:8px solid var(--y);padding-left:30px"><div class="y" style="font-size:28px;font-weight:700">가져온다 — 원리</div><div class="sub" style="font-size:44px;margin-top:10px;color:var(--ink)">장식에는 이유가<br>있어야 한다</div></div>
+    <div style="border-left:8px solid var(--r);padding-left:30px"><div class="r" style="font-size:28px;font-weight:700">두고 온다 — 모양</div>
+      <svg width="360" height="110" style="margin-top:14px"><circle cx="50" cy="55" r="44" fill="#E85E53" opacity=".5"/><polygon points="150,99 200,11 250,99" fill="#FFD200" opacity=".5"/><rect x="280" y="13" width="84" height="84" fill="#595EA6" opacity=".5"/><line x1="0" y1="100" x2="360" y2="10" stroke="#E85E53" stroke-width="6"/></svg></div>
   </div>
 </section>
 
-<!-- ───────── IV-1 · 게이트 ───────── -->
-<section class="sc" data-s="101" data-e="108">
-  <div class="chap"><b>IV</b> · 도출 — 출구</div>
-  <div class="abs" style="left:96px;top:130px"><div class="hl" style="font-size:62px" data-fx="up" data-at=".2">일곱 조건이 <span class="y">동시에</span> 켜질 때만 나간다.</div></div>
-  <div class="abs" id="gates" style="left:96px;top:330px;width:1728px;display:grid;grid-template-columns:repeat(7,1fr);gap:20px"></div>
-  <div class="abs" style="left:96px;top:790px;display:flex;gap:60px;font-size:28px" data-fx="fade" data-at="4.4">
-    <span><span style="display:inline-block;width:22px;height:22px;border:3px solid var(--ink);vertical-align:-3px;margin-right:12px"></span>AI가 예비 판정 → 사람이 확정</span>
-    <span><span style="display:inline-block;width:22px;height:22px;border:3px solid var(--b);vertical-align:-3px;margin-right:12px"></span>사람이 최종 판정</span>
-    <span class="dim">◆ 그 전에 C 게이트 — 러프 한 장으로 방향부터</span>
+<!-- 6 터널 -->
+<section class="sc" data-s="44" data-e="53">
+  <div class="num">3 · 터널 이펙트</div>
+  <svg class="abs" style="left:0;top:0" width="1920" height="1080" id="tun"></svg>
+  <div class="abs" style="left:160px;top:150px"><div class="hl" style="font-size:80px" data-fx="up" data-at=".2">◐ 세 겹을 겹칠수록 <span class="y">밝아진다.</span></div></div>
+  <div class="abs" style="left:160px;top:860px;width:1600px;display:grid;grid-template-columns:repeat(3,1fr);gap:40px">
+    <div data-fx="up" data-at="1.4" style="border-top:8px solid var(--ink);padding-top:20px"><div class="hl" style="font-size:50px">① 누가</div><div class="sub" style="font-size:28px;margin-top:6px">어떤 순간에 보는가</div></div>
+    <div data-fx="up" data-at="3.2" style="border-top:8px solid var(--b);padding-top:20px"><div class="hl" style="font-size:50px">② 어떤 브랜드</div><div class="sub" style="font-size:28px;margin-top:6px">이 클라이언트만의 것</div></div>
+    <div data-fx="up" data-at="5" style="border-top:8px solid var(--g);padding-top:20px"><div class="hl" style="font-size:50px">③ 어떻게 쓰나</div><div class="sub" style="font-size:28px;margin-top:6px">지킬 습관, 그 순간의 바람</div></div>
   </div>
 </section>
 
-<!-- ───────── IV-2 · 도출물 ───────── -->
-<section class="sc" data-s="108" data-e="118">
-  <div class="chap"><b>IV</b> · 도출 — 무엇이 나오나</div>
-  <div class="abs" style="left:96px;top:250px;width:900px">
-    <div class="q" style="font-size:58px;line-height:1.3" data-fx="up" data-at=".3">사용자는 <span style="color:var(--ink)">쓰던 대로</span> 쓰고,<br><span class="y">처음 보는 것처럼</span> 느낀다.</div>
-    <div style="margin-top:80px;display:flex;flex-direction:column;gap:22px;font-size:32px">
-      <div data-fx="left" data-at="2.2"><span class="mono y" style="margin-right:18px">01</span>375px 인터랙티브 프로토타입</div>
-      <div data-fx="left" data-at="2.7"><span class="mono y" style="margin-right:18px">02</span>S0~S5 — 왜 이렇게 판단했는지의 기록</div>
-      <div data-fx="left" data-at="3.2"><span class="mono y" style="margin-right:18px">03</span>판정 키트 — 사람이 결정할 재료</div>
+<!-- 7 출구 = 자메뷰 예시 -->
+<section class="sc" data-s="53" data-e="63">
+  <div class="num">4 · 출구</div>
+  <div class="abs" style="left:160px;top:150px"><div class="hl" style="font-size:80px" data-fx="up" data-at=".2">쓰던 대로 쓰는데, <span class="y">처음 보는 것처럼.</span></div></div>
+  <div class="abs" style="left:160px;top:380px;width:1600px">
+    <div data-fx="fade" data-at=".8" style="display:flex;align-items:center;gap:40px">
+      <div class="dim" style="font-size:30px;width:220px">흔한 진행 바</div>
+      <div style="flex:1;height:22px;background:var(--faint);border-radius:11px;overflow:hidden"><div id="plain" style="height:100%;width:0;background:#9a9a96;border-radius:11px"></div></div>
+    </div>
+    <div data-fx="fade" data-at="2.8" style="display:flex;align-items:flex-start;gap:40px;margin-top:80px">
+      <div class="y" style="font-size:30px;width:220px;font-weight:700">새로운 해석</div>
+      <div style="flex:1">
+        <div id="segs" style="display:grid;grid-template-columns:repeat(4,1fr);gap:26px"></div>
+        <div id="toast" style="margin-top:34px;font-size:34px;opacity:0">✓ 방금 고른 답이 <b class="y">'계획'</b> 영역에 반영됐어요</div>
+      </div>
     </div>
   </div>
-  <div class="abs" style="left:1160px;top:130px;width:440px;height:860px;border-radius:56px;border:3px solid #444;background:#F4F4F1;overflow:hidden;color:#111" data-fx="rise" data-at=".6">
-    <div style="background:#111;color:#F4F4F1;padding:70px 34px 34px">
-      <div style="font-size:16px;color:#9a9a96">8개의 답으로 맞춘 당신</div>
-      <div style="font-weight:900;font-size:34px;line-height:1.25;margin-top:12px" data-fx="type" data-at="1.4" data-dur="2.2" data-text="혼자 있는 시간에 충전하고, 정해 둔 것보다 그때의 판단을 믿는 사람"></div>
-      <div style="font-size:15px;color:#9a9a96;margin-top:16px;text-decoration:underline">왜 이 문장인가요</div>
+  <div class="abs" style="left:160px;top:860px;display:flex;gap:80px;font-size:34px">
+    <div data-fx="up" data-at="6.6"><span class="dim">지킨 것</span>  진행 바, 넘기는 방식</div>
+    <div data-fx="up" data-at="7.2"><span class="y">바꾼 것</span>  내 답이 어디로 가는지 보인다</div>
+  </div>
+</section>
+
+<!-- 8 스킬이 하는 일 -->
+<section class="sc" data-s="63" data-e="71">
+  <div class="num">5 · 스킬이 하는 일</div>
+  <div class="abs" style="left:160px;top:330px;width:1600px;display:grid;grid-template-columns:320px 80px 420px 80px 1fr;align-items:center">
+    <div data-fx="up" data-at=".3" style="border:3px solid var(--ink);border-radius:18px;padding:34px;text-align:center"><div class="hl" style="font-size:52px">브리프</div><div class="sub" style="font-size:26px;margin-top:8px">무엇을 · 누구에게<br>· 핵심 순간</div></div>
+    <div class="y hl" style="font-size:60px;text-align:center" data-fx="fade" data-at=".9">→</div>
+    <div data-fx="scale" data-at="1.1" style="background:var(--ink);color:#111;border-radius:18px;padding:34px;text-align:center"><div class="hl" style="font-size:44px">thefrom-ux</div><div style="font-size:26px;margin-top:10px">여행 · 터널 · 판정</div></div>
+    <div class="y hl" style="font-size:60px;text-align:center" data-fx="fade" data-at="1.8">→</div>
+    <div style="display:flex;flex-direction:column;gap:22px;font-size:36px">
+      <div data-fx="left" data-at="2.1"><span class="y">▣</span> 눌러볼 수 있는 화면</div>
+      <div data-fx="left" data-at="2.6"><span class="y">▣</span> 왜 그렇게 했는지의 기록</div>
+      <div data-fx="left" data-at="3.1"><span class="y">▣</span> 사람이 결정할 재료</div>
     </div>
-    <svg width="440" height="360" id="phoneTracks"></svg>
-    <div style="margin:0 28px;background:#111;color:#F4F4F1;border-radius:14px;padding:18px;text-align:center;font-weight:700;font-size:18px" data-fx="up" data-at="4.4">커뮤니티에 공개하기</div>
   </div>
+  <div class="abs center sub" style="top:780px;font-size:44px" data-fx="up" data-at="4.2">AI는 만들고, <span style="color:var(--ink)">판단은 사람이 한다.</span></div>
 </section>
 
-<!-- ───────── V-1 · 이즘 16 ───────── -->
-<section class="sc" data-s="118" data-e="127">
-  <div class="chap"><b>V</b> · 재료 — 여행한 16개의 사조</div>
-  <div class="abs" id="isms" style="left:96px;top:150px;width:1728px;display:grid;grid-template-columns:repeat(4,1fr);gap:18px"></div>
-  <div class="abs q dim" style="left:96px;top:980px;font-size:26px" data-fx="fade" data-at="5">각 사조에서 <span style="color:var(--ink)">가져올 것</span>(원리)과 <span style="color:var(--ink)">두고 올 것</span>(시각 인용)을 나눠 기록한다.</div>
-</section>
-
-<!-- ───────── V-2 · 노하우북 ───────── -->
-<section class="sc" data-s="127" data-e="136">
-  <div class="chap"><b>V</b> · 재료 — 더프롬 Knowhow Book</div>
-  <div class="abs" id="books" style="left:96px;top:160px;width:1728px;display:grid;grid-template-columns:repeat(3,1fr);gap:28px"></div>
-  <div class="abs" style="left:96px;top:880px;display:flex;align-items:baseline;gap:28px" data-fx="up" data-at="4.6">
-    <span class="hl y" style="font-size:96px" id="idcount">219</span>
-    <span class="q" style="font-size:34px">개의 ID — 사조 16 · 조형 어휘 171 · UI 패턴·모션·상태·시각화 32</span>
+<!-- 9 끝 -->
+<section class="sc" data-s="71" data-e="80">
+  <div class="abs center hl" style="top:250px;font-size:84px" data-fx="up" data-at=".2">"더프롬처럼"이 아니라,<br><span class="y">브리프</span>에서 시작합니다.</div>
+  <div class="abs center" style="top:540px;display:flex;justify-content:center;gap:40px;font-size:36px">
+    <span data-fx="pop" data-at="1.4" style="border:3px solid var(--y);border-radius:99px;padding:10px 30px">무엇을</span>
+    <span data-fx="pop" data-at="1.7" style="border:3px solid var(--y);border-radius:99px;padding:10px 30px">누구에게</span>
+    <span data-fx="pop" data-at="2" style="border:3px solid var(--y);border-radius:99px;padding:10px 30px">핵심 순간</span>
   </div>
-</section>
-
-<!-- ───────── CLOSE · 브리프 ───────── -->
-<section class="sc" data-s="136" data-e="147">
-  <div class="chap"><b>→</b> · 시작</div>
-  <div class="abs" style="left:96px;top:150px;width:1728px">
-    <div class="hl" style="font-size:66px" data-fx="up" data-at=".2">"더프롬처럼"이 아니라, <span class="y">브리프</span>에서 시작한다.</div>
-    <div class="q dim" style="font-size:32px;margin-top:20px" data-fx="up" data-at=".8">감각을 흉내 내지 않고 판단을 계산한다. 판단의 재료는 브리프다.</div>
-    <div id="brief6" style="display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:70px"></div>
-  </div>
-  <div class="abs" style="left:912px;top:880px;width:96px;height:96px;background:var(--ink)" data-fx="scale" data-at="7.2"></div>
-  <div class="abs mono dim" style="left:0;right:0;top:1000px;text-align:center;font-size:20px;letter-spacing:.3em" data-fx="fade" data-at="7.8">나로부터 · THE FROM</div>
+  <div class="abs" style="left:910px;top:760px;width:100px;height:100px;background:var(--y)" data-fx="scale" data-at="4"></div>
+  <div class="abs center" style="top:900px;font-size:40px;font-weight:700" data-fx="fade" data-at="4.6">익숙함의 새로움 — THE FROM UX/UI Skill</div>
 </section>
 
 </div></div>
 
-<div class="ctrl" id="ctrl">
+<div class="ctrl">
   <button id="play" aria-label="재생">재생</button>
-  <div class="scrubwrap">
-    <input class="scrub" id="scrub" type="range" min="0" max="147" step=".1" value="0" aria-label="재생 위치">
-    <div class="chaps" id="chaps"></div>
-  </div>
-  <span class="time" id="time">0:00 / 2:27</span>
+  <input class="scrub" id="scrub" type="range" min="0" max="80" step=".1" value="0" aria-label="재생 위치">
+  <span class="time" id="time">0:00 / 1:20</span>
 </div>
 </div>
 
 <script>
 (function(){
-const DUR=147;
+const DUR=80;
 const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
 const eo=x=>1-Math.pow(1-clamp(x),3);
 const eio=x=>{x=clamp(x);return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2};
 const $=s=>document.querySelector(s);
 const NS='http://www.w3.org/2000/svg';
-function svgEl(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
-function h(html){const d=document.createElement('div');d.innerHTML=html.trim();return d.firstChild}
+function S(tag,a,p){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+function h(x){const d=document.createElement('div');d.innerHTML=x.trim();return d.firstChild}
 
-/* ── 빌드: 반복 요소 ── */
-// I-1 1U 파생 눈금
-const der=$('#derive');
-[['0.5U',4,'컴포넌트 내부'],['1U',8,''],['2U',16,'본문 · 거터'],['3U',24,'모바일 마진'],['5U',40,'제목'],['8U',64,'대제목']].forEach((d,i)=>{
-  der.appendChild(h(`<div style="display:flex;align-items:center;gap:24px" data-fx="left" data-at="${.7+i*.25}"><span class="mono" style="width:90px;font-size:24px">${d[0]}</span><i style="display:block;height:18px;width:${d[1]*6}px;background:${i==1?'var(--y)':'var(--ink)'}"></i><span class="mono dim" style="font-size:20px">${d[1]}px ${d[2]}</span></div>`));
-});
-const g1=$('#grid1u');
-for(let x=96;x<=1824;x+=96){svgEl('line',{x1:x,y1:0,x2:x,y2:1080,stroke:'#FFFFFF','stroke-width':1,class:'gl'},g1)}
-for(let y=108;y<=1080;y+=96){svgEl('line',{x1:0,y1:y,x2:1920,y2:y,stroke:'#FFFFFF','stroke-width':1,class:'gl'},g1)}
-// I-2 새 해석 세그먼트
-const segs=$('#segs');
-['에너지','결정','계획','반응'].forEach((n,i)=>segs.appendChild(h(`<div data-fx="up" data-at="${3+i*.18}"><div class="mono dim" style="font-size:18px;margin-bottom:12px">${n}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><i class="seg" data-k="${i*2}" style="display:block;height:14px;border-radius:7px;background:var(--faint)"></i><i class="seg" data-k="${i*2+1}" style="display:block;height:14px;border-radius:7px;background:var(--faint)"></i></div></div>`)));
-// I-3 점
-const dots=$('#dots');
-for(let i=0;i<9;i++)dots.appendChild(h(`<i data-fx="scale" data-at="${.1+i*.06}" style="display:block;width:44px;height:44px;border-radius:50%;background:${i==4?'var(--y)':'#2E2E2C'}"></i>`));
-// II-1 비행
-const ISM=[
- ['JP','일본 미학','14C–',175,560],['KR','한국 전통 미학','고전',300,660],
- ['ARTCRAFT','미술공예운동','1861',420,540],['NOUVEAU','아르누보','1883',520,660],
- ['FUTUR','미래주의','1909',640,520],['DECO','아르데코','1910s',740,640],
- ['SUPREM','절대주의','1915',850,530],['CONSTR','구성주의','1915',950,650],
- ['DADA','다다','1916',1050,520],['STIJL','데 스틸','1917',1150,640],
- ['BAUHAUS','바우하우스','1919',1265,520],['SWISS','스위스','1950s',1380,650],
- ['BRUTAL','브루탈리즘','1950s–',1490,530],['POSTMOD','멤피스','1966',1590,650],
- ['DECON','해체주의','1967',1690,530],['PUNK','펑크','1976',1790,650]];
-const fl=$('#flight');
-svgEl('line',{x1:120,y1:710,x2:1830,y2:710,stroke:'#2A2A28','stroke-width':2},fl);
-const nodes={};
-ISM.forEach((d,i)=>{
-  const g=svgEl('g',{'data-fx':'fade','data-at':(.6+i*.06).toFixed(2)},fl);
-  nodes[d[0]]={c:svgEl('circle',{cx:d[3],cy:d[4],r:9,fill:'#3A3A37'},g),x:d[3]};
-  svgEl('text',{x:d[3],y:d[4]-24,'text-anchor':'middle',fill:'#F2F2EF','font-size':20,'font-family':'Noto Sans KR, Noto Sans CJK KR, sans-serif'},g).textContent=d[1];
-  svgEl('text',{x:d[3],y:d[4]+40,'text-anchor':'middle',fill:'#8C8C88','font-size':16,'font-family':'IBM Plex Mono, monospace'},g).textContent=d[2];
-});
-const STOPS=[
- ['JP','일본 미학','완결을 유보해 수신자의 참여를 요구한다','크라프트지 텍스처 + 미색 배경'],
- ['STIJL','데 스틸','불균등한 면적 비율에서 성립하는 긴장','적·황·청 + 굵은 검정 격자'],
- ['BAUHAUS','바우하우스','장식은 금지 대상이 아니라 입증 대상','원·삼각형·사각형 + 3원색'],
- ['BRUTAL','브루탈리즘','무엇으로 만들어졌는지 숨기지 않는다','굵은 테두리 + 형광 노랑 + 하드 섀도']];
-const pts=[[120,420]].concat(STOPS.map(s=>{const d=ISM.find(x=>x[0]==s[0]);return[d[3],d[4]]})).concat([[1840,380]]);
-let dpath=`M${pts[0][0]},${pts[0][1]}`;
-for(let i=1;i<pts.length;i++){const [x0,y0]=pts[i-1],[x1,y1]=pts[i];const mx=(x0+x1)/2;dpath+=` C${mx},${Math.min(y0,y1)-160} ${mx},${Math.min(y0,y1)-160} ${x1},${y1}`}
-const fpath=svgEl('path',{d:dpath,fill:'none',stroke:'#FFD200','stroke-width':2.5,'stroke-dasharray':'2 10','stroke-linecap':'round'},fl);
-const plane=svgEl('g',{},fl);
-svgEl('circle',{r:14,fill:'#FFD200'},plane);svgEl('circle',{r:30,fill:'none',stroke:'#FFD200','stroke-opacity':.35,'stroke-width':2},plane);
-const card=$('#ismcard');
-card.innerHTML=`<div><div class="mono dim" style="font-size:20px" id="ic-id"></div><div class="hl" style="font-size:56px;margin-top:8px" id="ic-name"></div></div>
-<div style="border-left:6px solid var(--y);padding-left:26px"><div class="mono y" style="font-size:20px">가져올 것 · 원리</div><div class="q" style="font-size:38px;margin-top:10px;line-height:1.3" id="ic-take"></div></div>
-<div style="border-left:6px solid var(--r);padding-left:26px"><div class="mono r" style="font-size:20px">두고 올 것 · 시각 인용</div><div style="font-size:34px;margin-top:10px;line-height:1.3;text-decoration:line-through;text-decoration-color:var(--r);color:var(--dim)" id="ic-leave"></div></div>`;
-// II-3 터널
-const tn=$('#tunnel');
-const tg=svgEl('g',{},tn);
-for(let i=0;i<12;i++){const k=Math.pow(.78,i);const w=1920*k,hh=1080*k;svgEl('rect',{x:960-w/2,y:560-hh/2,width:w,height:hh,fill:'none',stroke:'#FFFFFF','stroke-opacity':(.18-i*.012).toFixed(3),'stroke-width':2,class:'tr','data-i':i},tg)}
-const defs=svgEl('defs',{},tn);const rg=svgEl('radialGradient',{id:'halo'},defs);svgEl('stop',{offset:'0%','stop-color':'#FFD200','stop-opacity':.55},rg);svgEl('stop',{offset:'100%','stop-color':'#FFD200','stop-opacity':0},rg);
-const halo=svgEl('ellipse',{cx:960,cy:560,rx:200,ry:120,fill:'url(#halo)',id:'halo'},tn);
-const glow=svgEl('rect',{x:960-78,y:560-44,width:156,height:88,fill:'#FFD200',id:'exit'},tn);
-const layers=$('#layers');
-[['①','타겟','누가 · 어떤 순간에 · 어떤 기기로','var(--ink)'],['②','클라이언트 브랜드','무엇이 이 브랜드만의 것인가','var(--b)'],['③','소비자 이용','지킬 관성 · 그 순간의 동기와 감정','var(--g)']].forEach((l,i)=>{
-  layers.appendChild(h(`<div data-fx="up" data-at="${1.6+i*2}" style="width:560px;border-top:6px solid ${l[3]};padding-top:18px"><div class="hl" style="font-size:40px">${l[0]} ${l[1]}</div><div class="dim" style="font-size:24px;margin-top:8px">${l[2]}</div></div>`));
-});
-// III-2 체인
-const chain=$('#chain');
-[['① 과업','내가 어떤 사람인지 이해한다'],['② 보이게 할 것','네 영역 위의 내 위치'],['③ 형식','VIZ-POS · VIZ-CMP'],['④ 효익 지표','설명 없이 3초 안에 안다']].forEach((c,i)=>{
-  chain.appendChild(h(`<div data-fx="up" data-at="${.6+i*.35}" style="border-top:4px solid ${i==3?'var(--y)':'var(--line)'};padding-top:18px"><div class="mono ${i==3?'y':'dim'}" style="font-size:20px">${c[0]}</div><div style="font-size:32px;margin-top:10px;line-height:1.3;${i==2?'font-family:var(--mono)':''}">${c[1]}</div></div>`));
-});
-const viz=$('#viz');
-const VT=[['혼자 충전','함께 충전',.12,.44],['따져 보고','느낌 따라',.72,.55],['미리 정함','그때그때',.9,.5],['속으로 흡수','바로 표현',.2,.52]];
-const vDots=[];
-VT.forEach((v,i)=>{const y=70+i*72;
-  svgEl('text',{x:40,y:y+6,fill:'#8C8C88','font-size':20,'font-family':'Noto Sans KR, Noto Sans CJK KR'},viz).textContent=v[0];
-  svgEl('text',{x:1300,y:y+6,fill:'#8C8C88','font-size':20,'font-family':'Noto Sans KR, Noto Sans CJK KR','text-anchor':'end'},viz).textContent=v[1];
-  svgEl('line',{x1:180,y1:y,x2:1160,y2:y,stroke:'#3A3A37','stroke-width':3},viz);
-  const avg=svgEl('circle',{cx:180+980*v[3],cy:y,r:9,fill:'none',stroke:'#8C8C88','stroke-width':3},viz);
-  const band=svgEl('rect',{x:0,y:y-9,width:0,height:18,rx:9,fill:'#FFD200','fill-opacity':.18},viz);
-  const dot=svgEl('circle',{cx:670,cy:y,r:14,fill:'#FFD200'},viz);
-  vDots.push({dot,band,avg,x:180+980*v[2],i});
-});
-const ringBg=svgEl('circle',{cx:1520,cy:180,r:90,fill:'none',stroke:'#2A2A28','stroke-width':12},viz);
-const ring=svgEl('circle',{cx:1520,cy:180,r:90,fill:'none',stroke:'#FFD200','stroke-width':12,'stroke-dasharray':565.5,'stroke-dashoffset':565.5,transform:'rotate(-90 1520 180)'},viz);
-const ringT=svgEl('text',{x:1520,y:196,'text-anchor':'middle',fill:'#F2F2EF','font-size':48,'font-family':'IBM Plex Mono, monospace'},viz);ringT.textContent='0s';
-svgEl('text',{x:1520,y:320,'text-anchor':'middle',fill:'#8C8C88','font-size':20,'font-family':'Noto Sans KR, Noto Sans CJK KR'},viz).textContent='● 나  ○ 또래 평균  ▬ 답이 갈린 폭';
-// III-3 A 타일 · B 트랙
-const tA=$('#tilesA');
-['78','54','66','71','12','40','—','—','—','—','—','—'].forEach((n,i)=>tA.appendChild(h(`<div data-fx="scale" data-at="${1+i*.05}" style="aspect-ratio:1.4;background:#1C1C1B;border:1px solid #2E2E2C;border-radius:4px;display:grid;place-items:center;font-family:var(--mono);font-size:30px;color:#5E5E5B">${n}</div>`)));
-const tB=$('#tracksB');const bDots=[];
-[[.1],[.7],[.88]].forEach((v,i)=>{const y=30+i*55;svgEl('line',{x1:0,y1:y,x2:800,y2:y,stroke:'#3A3A37','stroke-width':3},tB);bDots.push({d:svgEl('circle',{cx:400,cy:y,r:12,fill:'#338F74'},tB),x:800*v[0]})});
-// III-4 휠
-const wh=$('#wheel');const P=['균형','비율','강조','대비','리듬','정렬','위계','여백','움직임','반복','다양성','통일'];
-const cx=560,cy=600,R=300;
-svgEl('circle',{cx,cy,r:R,fill:'none',stroke:'#2A2A28','stroke-width':2,'data-fx':'fade','data-at':'.3'},wh);
-const cg=svgEl('g',{'data-fx':'scale','data-at':'.2'},wh);
-svgEl('circle',{cx,cy,r:118,fill:'#161615',stroke:'#FFD200','stroke-width':2},cg);
-svgEl('text',{x:cx,y:cy-8,'text-anchor':'middle',fill:'#F2F2EF','font-size':30,'font-weight':900,'font-family':'Noto Sans KR, Noto Sans CJK KR'},cg).textContent='시각적 무게감';
-svgEl('text',{x:cx,y:cy+30,'text-anchor':'middle',fill:'#8C8C88','font-size':17,'font-family':'Noto Sans KR, Noto Sans CJK KR'},cg).textContent='색상 · 크기 · 형태 · 위치 · 여백';
-P.forEach((p,i)=>{const a=-Math.PI/2+i*Math.PI*2/12;const x=cx+R*Math.cos(a),y=cy+R*Math.sin(a);
-  const g=svgEl('g',{'data-fx':'scale','data-at':(.6+i*.12).toFixed(2)},wh);
-  svgEl('circle',{cx:x,cy:y,r:46,fill:i<5?'#F2F2EF':'#1C1C1B',stroke:i<5?'none':'#3A3A37','stroke-width':2},g);
-  svgEl('text',{x,y:y+8,'text-anchor':'middle',fill:i<5?'#0B0B0B':'#8C8C88','font-size':22,'font-weight':700,'font-family':'Noto Sans KR, Noto Sans CJK KR'},g).textContent=p;
-});
-svgEl('text',{x:cx,y:cy+R+100,'text-anchor':'middle',fill:'#8C8C88','font-size':20,'font-family':'IBM Plex Mono, monospace','data-fx':'fade','data-at':'2.4'},wh).textContent='Lv.1 · Principles of Design — 12원칙';
-// IV-1 게이트
-const G=[['G1','기성을 따라 하지 않았다',0],['G2','우리만의 색이 있다',1],['G3','쓰던 방식을 해치지 않는다',0],['G4','익숙한 패턴에 새 해석과 효익',0],['G5','처음 본 사람이 "어, 이거"',1],['G6','작동과 비주얼 모두에 컨셉',1],['G7','포트폴리오에 올릴 완성도',1]];
-const gates=$('#gates');
-G.forEach((g,i)=>gates.appendChild(h(`<div class="gate" data-fx="up" data-at="${.6+i*.3}" style="border:3px solid ${g[2]?'var(--b)':'var(--ink)'};border-radius:16px;padding:26px 20px;height:330px;display:flex;flex-direction:column;justify-content:space-between"><i class="lamp" data-k="${i}" style="display:block;width:40px;height:40px;border-radius:50%;background:#222"></i><div><div class="mono" style="font-size:36px">${g[0]}</div><div style="font-size:24px;line-height:1.35;margin-top:10px">${g[1]}</div></div></div>`)));
-// IV-2 폰 트랙
-const pt=$('#phoneTracks');const pDots=[];
-['혼자 충전','따져 보고','미리 정함','속으로 흡수'].forEach((n,i)=>{const y=60+i*72;
-  svgEl('text',{x:34,y:y-16,fill:'#111','font-size':16,'font-weight':700,'font-family':'Noto Sans KR, Noto Sans CJK KR'},pt).textContent=n;
-  svgEl('line',{x1:34,y1:y,x2:406,y2:y,stroke:'#D8D8D4','stroke-width':3},pt);
-  pDots.push({d:svgEl('circle',{cx:220,cy:y,r:10,fill:'#E85E53'},pt),x:34+372*[.08,.7,.93,.12][i]});
-});
-// V-1 이즘 그리드
-const ISMS=[['ARTCRAFT','미술공예운동','1861','장식은 구조에서 나온다'],['NOUVEAU','아르누보','1883','선의 가속·감속 → 모션의 원리'],['DECO','아르데코','1910s','장식을 기하학으로 규율한다'],['FUTUR','미래주의','1909','타입은 의미를 만드는 물질'],
- ['DADA','다다','1916','고르고 충돌시키는 것도 저작'],['SUPREM','절대주의','1915','환원은 검증 절차'],['CONSTR','구성주의','1915','빼도 무너지지 않으면 지운다'],['STIJL','데 스틸','1917','적은 어휘, 무한한 관계'],
- ['BAUHAUS','바우하우스','1919','장식은 입증 대상 · 재생산 가능한 부품'],['SWISS','스위스 스타일','1950s','그리드는 결정 비용을 줄이는 도구'],['BRUTAL','브루탈리즘','1950s–','만든 방식을 숨기지 않는다'],['POSTMOD','포스트모던·멤피스','1966','성격은 기능과 동등한 설계 대상'],
- ['DECON','해체주의','1967','이 위계는 누가 정했는가'],['PUNK','펑크·DIY','1976','도구를 열면 참여가 는다'],['JP','일본 미학','14C–','완결을 유보해 참여를 요구한다'],['KR','한국 전통 미학','고전','변수를 결과로 · 색은 질서의 코드']];
-const ig=$('#isms');
-ISMS.forEach((m,i)=>ig.appendChild(h(`<div data-fx="up" data-at="${.2+i*.12}" style="border-top:2px solid var(--line);padding-top:14px;height:185px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="mono dim" style="font-size:16px">ISM-${m[0]}</span><span class="mono dim" style="font-size:16px">${m[2]}</span></div><div class="hl" style="font-size:34px;margin-top:8px">${m[1]}</div><div class="q" style="font-size:24px;margin-top:10px;color:#CFCFCB;line-height:1.35">${m[3]}</div></div>`)));
-// V-2 노하우북
-const BK=[['Lv.1','Principles of Design','37p · 2026.04','이 모든 원칙은 사람이 이미지를 볼 때 시선을 놓치지 않고 흥미와 몰입감을 주기 위함이다.',[['균형','3'],['비율','8'],['강조','5'],['대비','7'],['리듬','5'],['+ 정렬·위계·여백·움직임·반복·다양성·통일','']]],
- ['Lv.2-1','Detail Expression in Design','66p · 2026.05','디자인의 디테일은 단순히 요소를 많이 넣는 것이 아니라, 어떻게 보여주고, 어떻게 드러내고, 어떻게 느끼게 하는가에서 결정된다.',[['앵글','5'],['뷰','14'],['빛과 그림자','24'],['질감','12']]],
- ['Lv.2-2','Visual System','112p · 2026.05','톤 앤 매너는 컬러와 무드, 비주얼 및 타이포 스타일의 일관된 조합을 통해 디자인의 분위기와 감정을 결정한다.',[['컬러','19'],['무드','5'],['비주얼 스타일','4'],['타이포','6'],['구도','23'],['그리드','10'],['레이아웃','9'],['비주얼 요소','12']]]];
-const bk=$('#books');
-BK.forEach((b,i)=>bk.appendChild(h(`<div data-fx="up" data-at="${.3+i*.5}" style="border:2px solid var(--line);border-radius:20px;padding:32px;height:660px;display:flex;flex-direction:column;gap:18px"><div class="mono y" style="font-size:22px">KNOWHOW BOOK ${b[0]}</div><div class="hl" style="font-size:40px;line-height:1.15">${b[1]}</div><div class="mono dim" style="font-size:18px">${b[2]}</div><div class="q" style="font-size:22px;line-height:1.5;color:#CFCFCB">${b[3]}</div><div style="margin-top:auto;display:flex;flex-wrap:wrap;gap:10px">${b[4].map(t=>`<span style="border:1px solid #444;border-radius:99px;padding:6px 14px;font-size:20px">${t[0]}${t[1]?` <b class="y mono">${t[1]}</b>`:''}</span>`).join('')}</div></div>`)));
-// CLOSE 브리프 6
-const b6=$('#brief6');
-[['★1','무엇을','서비스 · 범위 · 흐름'],['★2','누구에게','타겟 · 순간 · 기기'],['★3','핵심 순간','사용자가 얻고 싶은 것'],['★4','브랜드','클라이언트의 것 — 없으면 "없음"'],['★5','제약과 재료','문항 · 데이터 · 금지'],['★6','성공 기준','무엇이 되면 성공인가']].forEach((b,i)=>b6.appendChild(h(`<div data-fx="up" data-at="${1.6+i*.3}" style="border-top:4px solid ${i<3?'var(--y)':'var(--line)'};padding-top:18px"><div class="mono ${i<3?'y':'dim'}" style="font-size:22px">${b[0]}</div><div class="hl" style="font-size:40px;margin-top:6px">${b[1]}</div><div class="dim" style="font-size:24px;margin-top:6px">${b[2]}</div></div>`)));
+/* 빌드 */
+const tk=$('#ticks');[[.5,'4'],[1,'8'],[2,'16'],[3,'24'],[5,'40'],[8,'64']].forEach((t,i)=>tk.appendChild(h(`<div data-fx="up" data-at="${.6+i*.18}" style="display:flex;flex-direction:column;align-items:center;gap:12px"><i style="display:block;width:${t[0]*22}px;height:${t[0]*22}px;background:var(--ink)"></i><span style="font-size:22px;color:var(--dim)">${t[0]}U · ${t[1]}px</span></div>`)));
+const gr=$('#grid');for(let x=100;x<1920;x+=100)S('line',{x1:x,y1:0,x2:x,y2:1080,stroke:'#fff','stroke-width':1,class:'gl'},gr);for(let y=100;y<1080;y+=100)S('line',{x1:0,y1:y,x2:1920,y2:y,stroke:'#fff','stroke-width':1,class:'gl'},gr);
+const cloud=$('#ismcloud');const N=['바우하우스','스위스','데 스틸','브루탈리즘','일본 미학','한국 전통 미학','아르누보','멤피스','해체주의','구성주의','절대주의','미래주의','다다','펑크','아르데코','미술공예'];
+N.forEach((n,i)=>cloud.appendChild(h(`<span data-fx="fade" data-at="${.4+i*.07}" style="position:absolute;left:${(i%4)*25}%;top:${Math.floor(i/4)*72+(i%2)*18}px;font-size:${i<4?30:24}px;color:${i<4?'var(--ink)':'#8E8E8A'};white-space:nowrap">${n}</span>`)));
+// 비행
+const fly=$('#fly');const stops=[['아르누보',330],['미래주의',520],['데 스틸',720],['바우하우스',930],['스위스',1140],['브루탈리즘',1350],['멤피스',1560]];
+S('line',{x1:200,y1:520,x2:1760,y2:520,stroke:'#2A2A28','stroke-width':2},fly);
+const dots=stops.map((s,i)=>{const g=S('g',{},fly);const c=S('circle',{cx:s[1],cy:520,r:12,fill:'#3A3A37'},g);const t=S('text',{x:s[1],y:580,'text-anchor':'middle',fill:'#8E8E8A','font-size':26,'font-family':'Noto Sans KR, Noto Sans CJK KR'},g);t.textContent=s[0];return{c,t,x:s[1],name:s[0]}});
+const fp=S('path',{d:'M 200 420 C 500 300, 700 300, 930 505 C 1100 660, 1500 330, 1760 400',fill:'none',stroke:'#FFD200','stroke-width':3,'stroke-dasharray':'2 12','stroke-linecap':'round'},fly);
+const plane=S('g',{},fly);S('circle',{r:16,fill:'#FFD200'},plane);S('circle',{r:34,fill:'none',stroke:'#FFD200','stroke-opacity':.35,'stroke-width':3},plane);
+// 터널
+const tn=$('#tun');const rects=[];for(let i=0;i<11;i++){const k=Math.pow(.8,i);rects.push(S('rect',{x:960-760*k,y:560-265*k,width:1520*k,height:530*k,fill:'none',stroke:'#fff','stroke-width':2},tn))}
+const defs=S('defs',{},tn);const rg=S('radialGradient',{id:'hl'},defs);S('stop',{offset:'0%','stop-color':'#FFD200','stop-opacity':.7},rg);S('stop',{offset:'100%','stop-color':'#FFD200','stop-opacity':0},rg);
+const halo=S('ellipse',{cx:960,cy:560,rx:100,ry:60,fill:'url(#hl)'},tn);const exitR=S('rect',{fill:'#FFD200'},tn);
+// 세그먼트
+const sg=$('#segs');['에너지','결정','계획','반응'].forEach((n,i)=>sg.appendChild(h(`<div><div style="font-size:26px;color:var(--dim);margin-bottom:12px">${n}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><i class="sg" data-k="${i*2}" style="display:block;height:22px;border-radius:11px;background:var(--faint)"></i><i class="sg" data-k="${i*2+1}" style="display:block;height:22px;border-radius:11px;background:var(--faint)"></i></div></div>`)));
 
-/* ── 렌더 ── */
-const scenes=[...document.querySelectorAll('.sc')].map(s=>({el:s,s:+s.dataset.s,e:+s.dataset.e,fx:[...s.querySelectorAll('[data-fx]')].map(el=>({el,fx:el.dataset.fx,at:+el.dataset.at||0,dur:+(el.dataset.dur||.8),out:el.dataset.out!=null?+el.dataset.out:null,text:el.dataset.text}))}));
-function applyFx(f,lt){
-  let p=eo((lt-f.at)/f.dur);
-  let o=clamp((lt-f.at)/(f.dur*.6));
-  if(f.out!=null){const q=clamp((lt-f.out)/.6);o*=1-q;}
-  const st=f.el.style;
-  switch(f.fx){
-    case'fade':st.opacity=o;break;
-    case'up':st.opacity=o;st.transform=`translateY(${(1-p)*36}px)`;break;
-    case'left':st.opacity=o;st.transform=`translateX(${(1-p)*-48}px)`;break;
-    case'rise':st.opacity=o;st.transform=`translateY(${(1-p)*120}px)`;break;
-    case'scale':st.opacity=o;st.transform=`scale(${.6+.4*p})`;st.transformOrigin='center';st.transformBox='fill-box';break;
-    case'pop':{const b=clamp((lt-f.at)/.5);const s=b<1?(.6+.4*eo(b)+Math.sin(b*Math.PI)*.12):1;st.opacity=o;st.transform=`scale(${s})`;st.transformBox='fill-box';st.transformOrigin='center';break}
-    case'grow':st.opacity=o>0?1:0;st.transform=`scaleX(${p})`;break;
-    case'stamp':{const b=clamp((lt-f.at)/.35);st.opacity=b;st.transform=`rotate(-7deg) scale(${2.2-1.2*eo(b)})`;break}
-    case'type':{st.opacity=lt>f.at?1:0;const n=Math.round(clamp((lt-f.at)/f.dur)*f.text.length);f.el.textContent=f.text.slice(0,n);break}
-  }
-}
-function custom(i,lt,sc){
-  if(i===0){ // 정사각형 호흡 → 막대
-    const sq=$('#sq');const a=clamp(lt/1),b=clamp((lt-3.8)/.6);
-    sq.style.opacity=a*(1-b);sq.style.transform=`scale(${1+Math.sin(lt*2.4)*.04})`;
-  }
-  if(i===1){ // 그리드: 퍼졌다가 거의 사라진다
-    const on=eo((lt-3)/1.5),off=clamp((lt-6)/1.5);
-    document.querySelectorAll('#grid1u .gl').forEach((l,k)=>{l.setAttribute('stroke-opacity',(on*(.22-.17*off)).toFixed(3))});
-  }
-  if(i===2){ // 진행 바 → 4영역 × 2칸
-    $('#plainbar').style.width=(eio((lt-1.8)/1.4)*62)+'%';
-    document.querySelectorAll('#segs .seg').forEach(s=>{const k=+s.dataset.k;const on=lt>3.8+k*.22;s.style.background=on?(k%2?'var(--y)':'var(--ink)'):'var(--faint)'});
-  }
-  if(i===4){ // 비행
-    const L=fpath.getTotalLength();const p=eio((lt-1.2)/12.4);
-    fpath.style.strokeDashoffset=0;fpath.setAttribute('stroke-opacity',clamp((lt-1)/.6)*.8);
-    const pt=fpath.getPointAtLength(p*L);plane.setAttribute('transform',`translate(${pt.x},${pt.y})`);plane.style.opacity=clamp((lt-1)/.4);
-    let cur=-1;STOPS.forEach((s,k)=>{const n=nodes[s[0]];const reached=pt.x>=n.x-4;n.c.setAttribute('fill',reached?'#FFD200':'#3A3A37');n.c.setAttribute('r',reached?13:9);if(reached)cur=k});
-    Object.keys(nodes).forEach(k=>{if(!STOPS.find(s=>s[0]==k))nodes[k].c.setAttribute('fill',pt.x>nodes[k].x?'#6B6B67':'#3A3A37')});
-    const c=$('#ismcard');
-    if(cur>=0){const s=STOPS[cur];$('#ic-id').textContent='ISM-'+s[0];$('#ic-name').textContent=s[1];$('#ic-take').textContent=s[2];$('#ic-leave').textContent=s[3];
-      const since=lt-1.2-12.4*[.10,.44,.62,.80][cur];c.style.opacity=clamp(since/.5+1);c.style.transform=`translateY(${(1-eo(clamp(since/.5+1)))*20}px)`;}
-    else c.style.opacity=0;
-  }
-  if(i===6){ // 터널: 레이어가 겹칠수록 출구가 밝아진다
-    const n=[1.6,3.6,5.6].filter(t=>lt>t+.4).length;const lvl=clamp((lt-1.6)/6);
-    const ex=$('#exit');const k=.25+.25*n+.1*Math.sin(lt*3)*(n>0);
-    ex.setAttribute('fill-opacity',Math.min(1,k).toFixed(3));
-    const grow=1+n*.45+eo((lt-8)/2)*.9;const hl=$('#halo');hl.setAttribute('rx',160+n*170+eo((lt-8)/2)*260);hl.setAttribute('ry',100+n*100+eo((lt-8)/2)*150);hl.setAttribute('opacity',clamp((lt-1)/1));ex.setAttribute('width',156*grow);ex.setAttribute('height',88*grow);ex.setAttribute('x',960-78*grow);ex.setAttribute('y',560-44*grow);
-    document.querySelectorAll('#tunnel .tr').forEach(r=>{const j=+r.dataset.i;r.setAttribute('stroke-opacity',(clamp((lt-j*.08)/.6)*(.1+.05*n)*(1-j/14)).toFixed(3))});
-  }
-  if(i===8){ // 시각화: 점이 제자리로, 3초 링
-    vDots.forEach(v=>{const p=eo((lt-2.6-v.i*.25)/1.2);v.dot.setAttribute('cx',670+(v.x-670)*p);v.dot.setAttribute('opacity',clamp((lt-2.6-v.i*.25)/.3));
-      const bw=eo((lt-4-v.i*.15)/.8)*[140,90,60,120][v.i];v.band.setAttribute('x',v.x-bw/2);v.band.setAttribute('width',bw);
-      v.avg.setAttribute('opacity',clamp((lt-4.4)/.5))});
-    const rp=clamp((lt-2.6)/3);ring.setAttribute('stroke-dashoffset',565.5*(1-rp));ringT.textContent=(rp*3).toFixed(0)+'s';
-  }
-  if(i===9){bDots.forEach((b,k)=>{const p=eo((lt-1.8-k*.2)/1);b.d.setAttribute('cx',400+(b.x-400)*p)})}
-  if(i===11){document.querySelectorAll('#gates .lamp').forEach(l=>{const k=+l.dataset.k;const on=lt>1.4+k*.35;const blue=G[k][2];l.style.background=on?(blue?'var(--b)':'var(--y)'):'#222';l.style.boxShadow=on?`0 0 34px ${blue?'rgba(89,94,166,.7)':'rgba(255,210,0,.6)'}`:'none'})}
-  if(i===12){pDots.forEach((d,k)=>{const p=eo((lt-3.6-k*.2)/1);d.d.setAttribute('cx',220+(d.x-220)*p)})}
-  if(i===14){const n=Math.round(eo((lt-4.6)/1.6)*219);$('#idcount').textContent=n}
+/* 렌더 */
+const scenes=[...document.querySelectorAll('.sc')].map(s=>({el:s,s:+s.dataset.s,e:+s.dataset.e,fx:[...s.querySelectorAll('[data-fx]')].map(el=>({el,fx:el.dataset.fx,at:+el.dataset.at||0}))}));
+function fx(f,lt){const p=eo((lt-f.at)/.8),o=clamp((lt-f.at)/.5),st=f.el.style;
+  if(f.fx==='fade')st.opacity=o;
+  else if(f.fx==='up'){st.opacity=o;st.transform=`translateY(${(1-p)*40}px)`}
+  else if(f.fx==='left'){st.opacity=o;st.transform=`translateX(${(1-p)*-50}px)`}
+  else if(f.fx==='scale'){st.opacity=o;st.transform=`scale(${.6+.4*p})`}
+  else if(f.fx==='pop'){const b=clamp((lt-f.at)/.5);st.opacity=o;st.transform=`scale(${b<1?.6+.4*eo(b)+Math.sin(b*Math.PI)*.12:1})`}
+  else if(f.fx==='grow'){st.opacity=o>0?1:0;st.transform=`scaleX(${p})`}}
+function custom(i,lt){
+  if(i===0){$('#q-bar').style.width=(eio((lt-.4)/2.4)*70)+'%';$('#q-bar').style.background=lt>3.4?'var(--y)':'var(--ink)'}
+  if(i===2){const on=eo((lt-2)/1.2),off=clamp((lt-4.2)/1.4);document.querySelectorAll('#grid .gl').forEach(l=>l.setAttribute('stroke-opacity',(on*(.2-.17*off)).toFixed(3)))}
+  if(i===5){const L=fp.getTotalLength();const p=eio((lt-1)/4.6);const pt=fp.getPointAtLength(p*L);plane.setAttribute('transform',`translate(${pt.x},${pt.y})`);plane.style.opacity=clamp((lt-.8)/.4);fp.setAttribute('stroke-opacity',clamp((lt-.8)/.5)*.8);
+    dots.forEach(d=>{const hit=pt.x>=d.x-6;const bh=d.name==='바우하우스';d.c.setAttribute('fill',hit?(bh?'#FFD200':'#6B6B67'):'#3A3A37');d.c.setAttribute('r',hit&&bh?18:12);d.t.setAttribute('fill',hit&&bh?'#FFD200':'#8E8E8A')});
+    const s=clamp((lt-3.4)/.6);const bh=$('#bh');bh.style.opacity=s;bh.style.transform=`translateY(${(1-eo(s))*30}px)`}
+  if(i===6){const n=[1.4,3.2,5].filter(t=>lt>t+.3).length;const g=1+n*.55+eo((lt-6.6)/1.6)*.6;
+    exitR.setAttribute('width',90*g);exitR.setAttribute('height',50*g);exitR.setAttribute('x',960-45*g);exitR.setAttribute('y',560-25*g);exitR.setAttribute('fill-opacity',Math.min(1,.2+.27*n).toFixed(2));
+    halo.setAttribute('rx',120+n*200);halo.setAttribute('ry',70+n*80);halo.setAttribute('opacity',clamp(lt/.8));
+    rects.forEach((r,k)=>r.setAttribute('stroke-opacity',(clamp((lt-k*.06)/.6)*(.08+.04*n)*(1-k/13)).toFixed(3)))}
+  if(i===7){$('#plain').style.width=(eio((lt-1)/1.6)*55)+'%';
+    const picks=[0,2,5];document.querySelectorAll('#segs .sg').forEach(s=>{const k=+s.dataset.k;const idx=picks.indexOf(k);const on=idx>=0&&lt>3.4+idx*.9;s.style.background=on?(k===5?'var(--y)':'var(--ink)'):'var(--faint)'});
+    const t=$('#toast');const a=clamp((lt-5.3)/.4);t.style.opacity=a;t.style.transform=`translateY(${(1-eo(a))*14}px)`}
 }
 let T=0;
-function render(t){
-  T=t;
-  scenes.forEach((sc,i)=>{
-    const vis=t>=sc.s-.01&&t<sc.e;
-    const fade=Math.min(clamp((t-sc.s)/.5),clamp((sc.e-t)/.6));
-    sc.el.style.visibility=vis?'visible':'hidden';sc.el.style.opacity=vis?fade:0;
-    if(!vis)return;const lt=t-sc.s;
-    sc.fx.forEach(f=>applyFx(f,lt));custom(i,lt,sc);
-  });
-  scrub.value=t;tm.textContent=fmt(t)+' / '+fmt(DUR);
-}
+function render(t){T=t;scenes.forEach((sc,i)=>{const vis=t>=sc.s-.01&&t<sc.e;sc.el.style.visibility=vis?'visible':'hidden';sc.el.style.opacity=vis?Math.min(clamp((t-sc.s)/.5),clamp((sc.e-t)/.6)):0;if(!vis)return;const lt=t-sc.s;sc.fx.forEach(f=>fx(f,lt));custom(i,lt)});scrub.value=t;tm.textContent=fmt(t)+' / '+fmt(DUR)}
 window.__render=render;window.__DUR=DUR;
 
-/* ── 재생 ── */
+/* 재생 */
 const view=$('#view'),stage=$('#stage'),scrub=$('#scrub'),tm=$('#time'),btn=$('#play');
-function fit(){const k=view.clientWidth/1920;stage.style.transform=`scale(${k})`}
-addEventListener('resize',fit);fit();
+const fit=()=>{stage.style.transform=`scale(${view.clientWidth/1920})`};addEventListener('resize',fit);fit();
 const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let playing=false,last=0;
 function loop(ts){if(playing){const dt=(ts-last)/1000;last=ts;let t=T+dt;if(t>=DUR){t=DUR;setPlay(false)}render(t)}requestAnimationFrame(loop)}
 function setPlay(v){playing=v;last=performance.now();if(v&&T>=DUR)render(0);btn.textContent=v?'일시정지':'재생';btn.setAttribute('aria-label',v?'일시정지':'재생')}
-btn.onclick=()=>setPlay(!playing);
-scrub.oninput=()=>render(+scrub.value);
-const CH=[['I 철학',8],['II 방법론',32],['III 분석·추론',65],['IV 도출',101],['V 재료',118],['시작',136]];
-const chs=$('#chaps');chs.appendChild(h(`<button data-t="0">OPEN</button>`));CH.forEach(c=>chs.appendChild(h(`<button data-t="${c[1]}">${c[0]}</button>`)));
-chs.onclick=e=>{const b=e.target.closest('button');if(b)render(+b.dataset.t)};
-addEventListener('keydown',e=>{if(e.key===' '&&e.target===document.body){e.preventDefault();setPlay(!playing)}else if(e.key==='ArrowRight'){render(Math.min(DUR,T+5))}else if(e.key==='ArrowLeft'){render(Math.max(0,T-5))}});
+btn.onclick=()=>setPlay(!playing);scrub.oninput=()=>render(+scrub.value);
+addEventListener('keydown',e=>{if(e.key===' '&&e.target===document.body){e.preventDefault();setPlay(!playing)}else if(e.key==='ArrowRight')render(Math.min(DUR,T+5));else if(e.key==='ArrowLeft')render(Math.max(0,T-5))});
 if(location.hash==='#render'){document.body.classList.add('render');stage.style.transform='none'}
-/* 첫 프레임: 로고가 선 상태(정지 화면에서도 읽히게) */
-render(reduce?7:6.6);
-if(!reduce&&location.hash!=='#render'){render(0);setPlay(true)}
+render(reduce?5:0);
+if(!reduce&&location.hash!=='#render')setPlay(true);
 requestAnimationFrame(loop);
 })();
 </script>
-</body></html>
+</html>
