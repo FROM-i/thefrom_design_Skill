@@ -1,0 +1,12 @@
+{
+  "name": "thefrom",
+  "description": "더프롬(THE FROM) 사내 플러그인 — 디자인 방법론과 UX 스킬",
+  "owner": { "name": "THE FROM" },
+  "plugins": [
+    {
+      "name": "thefrom-ux",
+      "source": "./plugins/thefrom-ux",
+      "description": "더프롬 디자인 방법론(airplane·tunnel·효익 시각화·C 게이트·G1~G7)으로 UI/UX를 설계하고 375px 인터랙티브 프로토타입을 만든다"
+    }
+  ]
+}
