@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>[프로젝트] · [안 이름] 프로토타입</title>
+<!--
+  thefrom-ux 프로토타입 베이스 — 375px 단일 HTML.
+  규칙
+  1. 모든 치수는 --u(1U)에서 calc로 파생한다. px 리터럴을 쓰지 않는다(1px 선 제외).
+     1U 값은 S3_시스템.md에서 온다. 여기 값을 바꾸면 전체가 따라온다.
+  2. 장식 요소(일러스트·질감·장식 이미지)에는 data-decor를 단다 → 무채색 와이어 모드에서 숨겨진다.
+  3. 모든 JS 애니메이션은 motionOK()를 확인한다 → 정지 모드·동작 줄이기 설정에서 멈춘다.
+  4. 화면 구조:
+       <section class="screen" data-screen="id" data-label="이름">
+         <header class="bar-top">…</header>        (선택)
+         <div class="screen-body">…</div>          스크롤 영역
+         <footer class="bar-bottom">…</footer>     (선택) 하단 고정 CTA·입력창
+       </section>
+  5. 화면 이동은 go('id'). 진입 시 코드는 onEnter('id', fn)으로 등록한다.
+     go()는 history에 쌓이므로 기기·브라우저 뒤로 가기가 이전 화면으로 돌아간다.
+  6. 1U는 보이지 않는 뼈대다 — 치수의 출처일 뿐, 화면의 모티프가 아니다. (L0 §2.2.4, N7)
+  7. 컬러는 프로젝트(클라이언트) 브랜드에서 온다. 아래 기본값은 중립 회색이며 더프롬 팔레트가 아니다.
+  8. 바텀시트: <div class="sheet-dim" onclick="closeSheet()"></div><div class="sheet" tabindex="-1">…</div>를
+     화면 section 안에 두고 openSheet() / closeSheet()로 연다·닫는다. Esc·기기 뒤로 가기로도 닫히고, 열린 동안 초점이 시트 안에 머문다.
+  9. 타입 스케일은 L0 §2.2.5 — UI 0.25U(등록 단계만) · 디스플레이 0.5U · 행간 0.25U 배수.
+-->
+<style>
+:root{
+  /* ── 1U — S3에서 확정한 값 ───────────────────────── */
+  --u: 8px;
+
+  /* 간격 (L0 §2.2.1) — 0.5U는 컴포넌트 내부 간격 전용 (L0 §2.2.2) */
+  --s-in: calc(var(--u) * .5);
+  --s-1:  calc(var(--u) * 1);
+  --s-2:  calc(var(--u) * 2);
+  --s-3:  calc(var(--u) * 3);
+  --s-5:  calc(var(--u) * 5);
+  --s-8:  calc(var(--u) * 8);
+
+  /* 타입 스케일 (L0 §2.2.5) — S3 스케일 표에 등록한 단계만 남기고 지운다 */
+  /* UI 스케일: 1.5~3U 구간, 0.25U 단위, 최대 5단계, 인접 비율 1.125 이상 */
+  --t-cap:   calc(var(--u) * 1.5);   /* 12 */
+  --t-small: calc(var(--u) * 1.75);  /* 14 */
+  --t-body:  calc(var(--u) * 2);     /* 16 */
+  --t-list:  calc(var(--u) * 2.25);  /* 18 */
+  --t-sub:   calc(var(--u) * 2.75);  /* 22 */
+  /* 디스플레이 스케일: 0.5U 단위, 최대 3단계 */
+  --t-title: calc(var(--u) * 4);     /* 32 */
+  --t-big:   calc(var(--u) * 5.5);   /* 44 */
+  --t-hero:  calc(var(--u) * 8);     /* 64 */
+  /* 행간: 0.25U 배수 */
+  --lh-body: calc(var(--u) * 3);     /* 24 */
+  --lh-small:calc(var(--u) * 2.5);   /* 20 */
+
+  /* 코너 반경 3단계 */
+  --r-1: calc(var(--u) * .5);
+  --r-2: calc(var(--u) * 1);
+  --r-3: calc(var(--u) * 2);
+
+  /* 그리드 — 거터 2U, 마진: 모바일 3U (L0 §2.2.1) */
+  --gutter: var(--s-2);
+  --margin: calc(var(--u) * 3);
+
+  /* 선 — 1px 선과 초점 링 */
+  --line-1: 1px;
+  --line-2: 2px;
+
+  /* 터치 타깃 하한 — 6U(48px@8) */
+  --hit: calc(var(--u) * 6);
+
+  /* ── 컬러 — S2 60-30-10 역할로 채운다 (브랜드 값은 L0 §3) ── */
+  --c-bg: #FFFFFF;      /* 60 */
+  --c-fg: #111111;
+  --c-sub: #6B6B6B;
+  --c-2:  #EFEFEF;      /* 30 */
+  --c-acc:#2F2F2F;      /* 10 — 프로젝트 브랜드의 강조색으로 교체 */
+  --c-line: rgba(0,0,0,.12);
+
+  /* ── 모션 성격 — MOTION-* 에서 주 1 + 보조 1. 시간도 기준값에서 파생 ── */
+  --tm: 160ms;                          /* 기준 시간 */
+  --tm-2: calc(var(--tm) * 2);
+  --ease-main: cubic-bezier(.2,.8,.2,1);
+
+  --font: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+}
+
+/* ── 무대 ─────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#E9E9E6;font-family:var(--font);color:var(--c-fg)}
+.stage{min-height:100vh;display:flex;flex-direction:column;align-items:center;gap:var(--s-2);padding:var(--s-3) var(--s-1)}
+.kit{display:flex;flex-wrap:wrap;gap:var(--s-1);justify-content:center;max-width:375px;font-size:12px}
+.kit button{border:1px solid #bbb;background:#fff;border-radius:999px;padding:6px 12px;font:inherit;cursor:pointer}
+.kit button[aria-pressed="true"]{background:#111;color:#fff;border-color:#111}
+.frame{position:relative;width:375px;height:812px;background:var(--c-bg);overflow:clip;border-radius:32px;box-shadow:0 0 0 10px #111}
+/* 바텀시트 — 닫힌 시트는 visibility:hidden (포커스·클릭으로 프레임이 스크롤되어 시트가 비치는 문제 방지) */
+.sheet-dim{position:absolute;inset:0;background:rgba(0,0,0,.4);opacity:0;visibility:hidden;transition:opacity var(--tm-2) var(--ease-main),visibility 0s linear var(--tm-2)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--c-bg);border-radius:var(--r-3) var(--r-3) 0 0;transform:translateY(100%);visibility:hidden;transition:transform var(--tm-2) var(--ease-main),visibility 0s linear var(--tm-2)}
+.sheet-open .sheet-dim{opacity:1;visibility:visible;transition-delay:0s}
+.sheet-open .sheet{transform:none;visibility:visible;transition-delay:0s}
+.screen{position:absolute;inset:0;display:none;flex-direction:column}
+.screen.on{display:flex}
+.screen-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.bar-top,.bar-bottom{flex:none}
+:focus-visible{outline:var(--line-2) solid var(--c-acc);outline-offset:var(--line-2)}
+
+/* ── G6 판정 키트 ① 무채색 와이어: 색·이미지·질감 제거, 작동 유지 ── */
+[data-mode="wire"] .frame{filter:grayscale(1) contrast(.85)}
+[data-mode="wire"] [data-decor]{visibility:hidden}
+[data-mode="wire"] .frame *,[data-mode="wire"] .frame *::before,[data-mode="wire"] .frame *::after{background-image:none !important;box-shadow:none !important;text-shadow:none !important}
+
+/* ── G6 판정 키트 ② 정지 화면: 인터랙션·모션 정지 ── */
+[data-mode="still"] .frame *,[data-mode="still"] .frame *::before,[data-mode="still"] .frame *::after{
+  animation-play-state:paused !important;transition:none !important}
+[data-mode="still"] .frame{pointer-events:none}
+
+@media (prefers-reduced-motion: reduce){
+  .frame *{animation-duration:1ms !important;transition-duration:1ms !important}
+}
+
+/* ── 여기부터 프로젝트 스타일 ─────────────── */
+
+</style>
+</head>
+<body data-mode="normal">
+<div class="stage">
+  <div class="kit" role="toolbar" aria-label="판정 키트">
+    <button data-set-mode="normal" aria-pressed="true">기본</button>
+    <button data-set-mode="wire" aria-pressed="false">무채색 와이어 (G6①)</button>
+    <button data-set-mode="still" aria-pressed="false">정지 화면 (G6②)</button>
+  </div>
+  <div class="kit" id="screen-nav" aria-label="화면 이동"></div>
+
+  <main class="frame" aria-label="375px 프로토타입">
+    <!-- 화면 예시
+    <section class="screen" data-screen="quiz" data-label="문항 진행">…</section>
+    -->
+  </main>
+</div>
+
+<script>
+/* 판정 키트 모드 */
+const body=document.body;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function motionOK(){return body.dataset.mode!=='still' && !reduce}
+document.querySelectorAll('[data-set-mode]').forEach(b=>b.addEventListener('click',()=>{
+  body.dataset.mode=b.dataset.setMode;
+  document.querySelectorAll('[data-set-mode]').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  document.getAnimations().forEach(a=>{ if(!motionOK()) a.pause(); else a.play(); });
+}));
+
+/* 화면 전환 — go('id')로 이동, onEnter('id', fn)으로 진입 훅 등록 */
+const screens=[...document.querySelectorAll('.screen')];
+const nav=document.getElementById('screen-nav');
+const enterHooks={};
+function onEnter(id,fn){(enterHooks[id]=enterHooks[id]||[]).push(fn)}
+function show(id){
+  screens.forEach(s=>s.classList.toggle('on',s.dataset.screen===id));
+  nav.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.go===id));
+  const body=document.querySelector('.screen.on .screen-body'); if(body) body.scrollTop=0;
+  (enterHooks[id]||[]).forEach(fn=>fn());
+}
+function go(id,{replace=false}={}){
+  try{ history[replace?'replaceState':'pushState']({screen:id},'','#'+id) }catch(e){}
+  show(id);
+}
+function back(){ history.length>1 ? history.back() : null }
+/* 바텀시트 — 초점 가둠 · Esc · 기기 뒤로 가기로 닫힘 (PAT-SHEET 지킬 것, N4) */
+let sheetReturn=null;
+function openSheet(sec){
+  const scr=sec||document.querySelector('.screen.on'); scr.classList.add('sheet-open');
+  sheetReturn=document.activeElement;
+  const sh=scr.querySelector('.sheet'); sh.setAttribute('role','dialog'); sh.setAttribute('aria-modal','true');
+  const f=sh.querySelector('button,[href],input,textarea,select,[tabindex]:not([tabindex="-1"])'); (f||sh).focus?.();
+  try{ history.pushState({screen:scr.dataset.screen,sheet:true},'','#'+scr.dataset.screen) }catch(e){}
+}
+function _close(){ const scr=document.querySelector('.screen.sheet-open'); if(!scr) return false;
+  scr.classList.remove('sheet-open'); sheetReturn?.focus?.(); return true }
+function closeSheet(){ if(history.state&&history.state.sheet){ history.back() } else { _close() } }
+addEventListener('keydown',e=>{
+  const scr=document.querySelector('.screen.sheet-open'); if(!scr) return;
+  if(e.key==='Escape'){ e.preventDefault(); closeSheet(); return }
+  if(e.key==='Tab'){ const el=[...scr.querySelectorAll('.sheet button,.sheet [href],.sheet input,.sheet textarea,.sheet select')];
+    if(!el.length) return; const first=el[0], last=el[el.length-1];
+    if(e.shiftKey&&document.activeElement===first){ e.preventDefault(); last.focus() }
+    else if(!e.shiftKey&&document.activeElement===last){ e.preventDefault(); first.focus() } }
+});
+addEventListener('popstate',e=>{ if(_close()) return; if(e.state&&e.state.screen) show(e.state.screen) });
+screens.forEach(s=>{const b=document.createElement('button');b.textContent=s.dataset.label||s.dataset.screen;b.dataset.go=s.dataset.screen;b.onclick=()=>go(s.dataset.screen);nav.appendChild(b)});
+/* 첫 화면 — 캡처 스크립트는 #id로 특정 화면을 연다 */
+window.addEventListener('load',()=>{
+  const first=(location.hash.slice(1))||(screens[0]&&screens[0].dataset.screen);
+  if(first) go(first,{replace:true});
+});
+</script>
+</body>
+</html>

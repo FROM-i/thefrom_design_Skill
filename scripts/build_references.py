@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""method/ 의 방법론 원본에서 스킬의 references/ 를 다시 만든다.
+"""method/ 의 방법론 원본에서 스킬의 references/ 와 portable/knowledge/ 를 다시 만든다.
 
 방법론을 고칠 때는 method/ 만 고치고 이 스크립트를 실행한다.
 references/ 를 직접 고치지 않는다 — 다음 빌드에서 덮어써진다.
@@ -11,7 +11,9 @@ import re, sys, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC = ROOT / "method"
-DST = ROOT / "plugins" / "thefrom-ux" / "skills" / "thefrom-ux" / "references"
+SKILL = ROOT / "plugins" / "thefrom-ux" / "skills" / "thefrom-ux"
+DST = SKILL / "references"
+PORTABLE = ROOT / "portable" / "knowledge"   # GPT·Gemini 등 다른 AI에 올릴 지식 파일
 
 NOTE = ("> **스킬 참조본 — 자동 생성 파일. 직접 고치지 말 것.** 원본: `method/{src}`. "
         "방법론을 고칠 때는 원본을 고치고 `python3 scripts/build_references.py`를 실행한다.\n\n")
@@ -52,11 +54,21 @@ def build():
     }
 
 
+def portable(files):
+    out = dict(files)
+    out["proto-base.html"] = (SKILL / "assets" / "proto-base.html").read_text(encoding="utf-8")
+    out["brief-template.md"] = (SKILL / "assets" / "brief-template.md").read_text(encoding="utf-8")
+    return out
+
+
 def main():
     files = build()
+    port = portable(files)
     if "--check" in sys.argv:
         stale = [n for n, t in files.items()
                  if not (DST / n).exists() or (DST / n).read_text(encoding="utf-8") != t]
+        stale += ["portable/" + n for n, t in port.items()
+                  if not (PORTABLE / n).exists() or (PORTABLE / n).read_text(encoding="utf-8") != t]
         if stale:
             print("references/ 가 method/ 와 어긋났습니다:", ", ".join(stale))
             print("python3 scripts/build_references.py 를 실행하고 커밋하세요.")
@@ -67,6 +79,10 @@ def main():
     for n, t in files.items():
         (DST / n).write_text(t, encoding="utf-8")
         print(f"  {n}  {len(t.splitlines())}줄")
+    PORTABLE.mkdir(parents=True, exist_ok=True)
+    for n, t in port.items():
+        (PORTABLE / n).write_text(t, encoding="utf-8")
+    print(f"  portable/knowledge/ {len(port)}개")
     print("완료. 방법론을 바꿨다면 plugin.json 의 version 을 올리세요.")
 
 

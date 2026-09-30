@@ -24,6 +24,9 @@
 비공개 저장소라면 먼저 `gh auth login` → `gh auth setup-git`으로 GitHub 인증을 저장해 두세요.
 자동 업데이트는 `/plugin` → Marketplaces → thefrom → **Enable auto-update**.
 
+### ChatGPT · Gemini 등 다른 AI에서
+[`portable/README.md`](portable/README.md) — 지침 한 장(`portable/instructions.md`)과 지식 파일 8개(`portable/knowledge/`)로 맞춤 GPT·Gem을 만드는 방법.
+
 ### 쓰는 법
 "더프롬 방식으로 ○○ 앱의 결과 화면을 설계해줘"처럼 요청하면 스킬이 S0부터 진행합니다.
 브리프 템플릿: [`templates/brief.md`](templates/brief.md)
@@ -42,7 +45,8 @@ plugins/thefrom-ux/
     SKILL.md                  실행기 (직접 작성)
     references/               method/에서 자동 생성 — 직접 고치지 않는다
     assets/proto-base.html    375px 프로토타입 베이스
-scripts/build_references.py  method/ → references/ 빌드
+scripts/build_references.py  method/ → references/ · portable/knowledge/ 빌드
+portable/                    다른 AI용 지침과 지식 파일
 .claude-plugin/marketplace.json
 ```
 
