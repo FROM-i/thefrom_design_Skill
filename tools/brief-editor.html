@@ -97,6 +97,8 @@ pre#md{margin:0;padding:14px;font-family:var(--mono);font-size:12.5px;line-heigh
   <label class="btn" for="fileIn" style="display:inline-flex;align-items:center">불러오기 (.md)</label>
   <input id="fileIn" type="file" accept=".md,text/markdown,text/plain" class="hidden">
   <button id="bCopy" type="button">복사</button>
+  <button id="bClaude" type="button" title="브리프를 담아 Claude 새 대화를 엽니다">Claude에서 시작 ↗</button>
+  <button id="bGPT" type="button" title="브리프를 담아 ChatGPT 새 대화를 엽니다">ChatGPT에서 시작 ↗</button>
   <button id="bSave" type="button" class="primary">.md 저장</button>
   <span class="saved" id="savedAt" aria-live="polite"></span>
 </div></header>
@@ -106,7 +108,7 @@ pre#md{margin:0;padding:14px;font-family:var(--mono);font-size:12.5px;line-heigh
   <div class="intro">
     <p><b>"더프롬처럼 만들어줘"로는 시작되지 않습니다.</b> 이 스킬은 감각을 흉내 내지 않고 판단을 계산하고, 판단의 재료는 브리프입니다.</p>
     <p><span class="star">★</span> 필수 6항목 중 <b>★1 무엇을 · ★2 누구에게 · ★3 핵심 순간</b>이 비면 스킬은 아무것도 만들지 않고 질문부터 합니다. ★4~6은 비우면 가정으로 진행합니다.</p>
-    <p>쓰는 동안 이 브라우저에 자동 저장됩니다. 끝나면 <b>.md 저장</b> → Claude·ChatGPT·Gemini에 첨부하거나 저장소 <code>briefs/</code>에 커밋하세요.</p>
+    <p>쓰는 동안 이 브라우저에 자동 저장됩니다. 끝나면 <b>Claude에서 시작 / ChatGPT에서 시작</b>으로 바로 넘기거나, <b>.md 저장</b> → AI에 첨부하거나 저장소 <code>briefs/</code>에 커밋하세요. (thefrom-ux 플러그인이 설치되어 있어야 합니다.)</p>
   </div>
   <form id="f" autocomplete="off" onsubmit="return false"></form>
 </div>
@@ -286,6 +288,16 @@ document.getElementById('bSave').onclick=()=>{
   const d=read();const blob=new Blob([current],{type:'text/markdown;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fileName(d);document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
   toast(`${fileName(d)} 저장됨`)};
 document.getElementById('bCopy').onclick=async()=>{try{await navigator.clipboard.writeText(current);toast('복사됨 — AI 대화창에 붙여넣으세요')}catch(e){const r=document.createRange();r.selectNodeContents(mdEl);const s=getSelection();s.removeAllRanges();s.addRange(r);toast('선택됨 — Ctrl+C로 복사하세요')}};
+/* AI로 바로 넘기기 — 짧으면 주소에 담아 열고, 길면 복사한 뒤 새 대화를 연다 */
+const AI={claude:'https://claude.ai/new?q=',gpt:'https://chatgpt.com/?q='},HOME={claude:'https://claude.ai/new',gpt:'https://chatgpt.com/'};
+const handoff=async key=>{
+  const body='thefrom-ux 스킬로 진행해줘.\n\n'+current.replace(/<!-- brief-data[\s\S]*?-->\n?/,'').trim();
+  const q=encodeURIComponent(body);let copied=false;
+  try{await navigator.clipboard.writeText(body);copied=true}catch(e){}
+  if(q.length<7000){window.open(AI[key]+q,'_blank','noopener');toast('새 대화에 브리프를 담았습니다')}
+  else{window.open(HOME[key],'_blank','noopener');toast(copied?'브리프가 길어 복사해 두었습니다 — 새 대화에 붙여넣기(Ctrl+V)':'브리프가 깁니다 — 복사 버튼으로 복사해 붙여넣으세요')}};
+document.getElementById('bClaude').onclick=()=>handoff('claude');
+document.getElementById('bGPT').onclick=()=>handoff('gpt');
 document.getElementById('bExample').onclick=()=>{write(EXAMPLE);toast('예시로 채웠습니다')};
 let newArmed=false;
 document.getElementById('bNew').onclick=e=>{if(!newArmed){newArmed=true;e.target.textContent='한 번 더 누르면 비웁니다';setTimeout(()=>{newArmed=false;e.target.textContent='새로 쓰기'},2500);return}

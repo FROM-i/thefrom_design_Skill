@@ -1,10 +1,18 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "thefrom-ux",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "THE FROM 디자인 방법론(airplane·tunnel·효익 시각화·C 게이트·G1~G7)으로 UI/UX를 설계·검증하고 375px 인터랙티브 프로토타입을 만드는 디자인 워크플로",
-  "author": { "name": "THE FROM" },
+  "author": {
+    "name": "THE FROM"
+  },
   "homepage": "https://github.com/FROM-i/thefrom_design_Skill",
   "repository": "https://github.com/FROM-i/thefrom_design_Skill",
-  "keywords": ["design", "ux", "ui", "prototype", "thefrom"]
+  "keywords": [
+    "design",
+    "ux",
+    "ui",
+    "prototype",
+    "thefrom"
+  ]
 }
