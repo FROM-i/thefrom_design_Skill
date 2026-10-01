@@ -1,6 +1,9 @@
 # 다른 AI에서 thefrom-ux 쓰기 — ChatGPT · Gemini · 기타
 
-thefrom-ux는 Claude 스킬로 만들었지만, 방법론 자체는 문서입니다. **지침 한 장 + 지식 파일 8개**만 있으면 ChatGPT, Gemini 등 다른 AI에서도 같은 방식으로 쓸 수 있습니다.
+> **ChatGPT 업무용 워크스페이스와 Codex는 이제 플러그인으로 설치합니다** — 저장소 루트 [README의 설치](../README.md#설치--직원용)를 보세요. 마켓플레이스로 들어가 자동 업데이트되고, 스킬 원본을 그대로 씁니다.
+> 이 폴더(`portable/`)는 **플러그인을 쓸 수 없는 환경** — Gemini, 개인 ChatGPT(맞춤 GPT), 기타 AI·API — 을 위한 것입니다.
+
+thefrom-ux 방법론 자체는 문서입니다. **지침 한 장 + 지식 파일 8개**만 있으면 플러그인이 없는 AI에서도 같은 방식으로 쓸 수 있습니다. 대신 자동 업데이트는 되지 않습니다.
 
 ```
 portable/
@@ -24,9 +27,9 @@ portable/
 
 | 도구 | 방식 | 준비물 | 비고 |
 |---|---|---|---|
-| **ChatGPT — 맞춤 GPT** | 지침 + 지식 파일 | `instructions.md` + `knowledge/` 8개 | 개인 유료 플랜 이상. 가장 쉬운 방법 |
-| **ChatGPT — Skills** | 스킬 폴더 그대로 | `plugins/thefrom-ux/skills/thefrom-ux/` | ChatGPT Work(업무용 워크스페이스) 베타. 관리자가 켜야 함. Claude 스킬과 같은 SKILL.md 표준 |
-| **Codex** (OpenAI 코딩 에이전트) | 스킬 폴더 그대로 | 위와 같음 | `.agents/skills/thefrom-ux/`에 복사 |
+| **ChatGPT — 플러그인** ★권장 | GitHub 마켓플레이스 | 저장소 주소 | 업무용 워크스페이스. 관리자가 1회 가져오면 매일 동기화. [README](../README.md#chatgpt--플러그인-업무용-워크스페이스-관리자-1회) |
+| **Codex** ★권장 | GitHub 마켓플레이스 | 저장소 주소 | `codex plugin marketplace add FROM-i/thefrom_design_Skill` |
+| **ChatGPT — 맞춤 GPT** | 지침 + 지식 파일 | `instructions.md` + `knowledge/` 8개 | 플러그인을 쓸 수 없는 개인 플랜. 수동 업데이트 |
 | **Gemini — Gem** | 지침 + 지식 파일 | `instructions.md` + `knowledge/` 8개 | Google Drive에서 파일을 추가하면 원본 수정이 자동 반영 |
 | **기타 AI / API** | 시스템 프롬프트 + 첨부 | 위와 같음 | 파일 첨부가 안 되면 `core.md`와 `pipeline.md`만이라도 붙인다 |
 
@@ -45,12 +48,11 @@ portable/
    - `이 화면 캡처를 G7 기준으로 비평해줘`
 7. 공유: 우측 상단 **공유** → 조직 내 링크 공유
 
-## 3. ChatGPT Skills · Codex에 넣기
+## 3. ChatGPT 플러그인 · Codex — 이제 마켓플레이스로
 
-ChatGPT Skills와 Codex는 Claude와 같은 **SKILL.md 표준(Agent Skills)**을 따릅니다. 스킬 폴더를 그대로 씁니다.
+ChatGPT와 Codex는 **플러그인 = 스킬 + 앱 + 리소스** 구조이고, 스킬만 든 플러그인도 됩니다. 이 저장소는 OpenAI용 마켓플레이스(`.agents/plugins/marketplace.json`)와 범용 매니페스트(`plugins/thefrom-ux/plugin.json`)를 갖고 있어서, 스킬 폴더를 zip으로 올리거나 복사할 필요가 없습니다. 설치 방법은 [루트 README](../README.md#설치--직원용)에 있습니다.
 
-- **ChatGPT Skills**: 워크스페이스 관리자가 설정에서 Skills를 켠 뒤, `plugins/thefrom-ux/skills/thefrom-ux/` 폴더를 zip으로 묶어 업로드합니다. 대화에서 `@thefrom-ux`로 부르거나 관련 요청을 하면 자동으로 붙습니다.
-- **Codex**: 프로젝트 폴더의 `.agents/skills/thefrom-ux/` 또는 내 홈의 `~/.agents/skills/thefrom-ux/`에 스킬 폴더를 복사합니다. 이 경우 Claude와 거의 같이 동작합니다 — `scripts/shoot.py`로 캡처 루프까지 돌 수 있습니다(Playwright 필요).
+- 예전 방식(스킬 zip 업로드, `.agents/skills/`에 복사)도 동작하지만 **업데이트가 수동**입니다. 마켓플레이스 설치로 바꾸세요.
 
 ## 4. Gemini Gem 만들기
 
@@ -94,9 +96,9 @@ ChatGPT Skills와 Codex는 Claude와 같은 **SKILL.md 표준(Agent Skills)**을
 
 ---
 
-## 7. Claude와 다른 점 — 알아두면 결과가 좋아집니다
+## 7. 플러그인 설치와 다른 점 — 알아두면 결과가 좋아집니다
 
-| 항목 | Claude (스킬) | ChatGPT / Gemini (지침 + 지식) | 보완 방법 |
+| 항목 | 플러그인 (Claude · Codex) | 맞춤 GPT / Gem (지침 + 지식) | 보완 방법 |
 |---|---|---|---|
 | 참조 파일 읽기 | 단계마다 필요한 파일을 통째로 읽음 | 지식 파일을 **검색해서 일부만** 읽음 | 요청에 절이나 ID를 적는다 — "core.md §6.6 G7 기준으로" |
 | 크리틱 루프 캡처 | `shoot.py`로 자동 캡처하고 스스로 봄 | 대개 불가 | **캡처를 직접 첨부**하고 비평을 요청한다. 캔버스 미리보기를 캡처해도 된다 |

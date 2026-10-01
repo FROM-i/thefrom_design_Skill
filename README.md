@@ -140,8 +140,15 @@ flowchart LR
 
 ## 이 저장소
 
-더프롬 디자인 방법론과, 그것을 실행하는 Claude 스킬 `thefrom-ux`의 사내 저장소입니다.
-이 저장소 자체가 Claude **플러그인 마켓플레이스**라서, 저장소 주소만 알면 각자 Claude에 설치할 수 있습니다.
+더프롬 디자인 방법론과, 그것을 실행하는 스킬 `thefrom-ux`의 사내 저장소입니다.
+이 저장소 자체가 **플러그인 마켓플레이스**라서, 저장소 주소만 알면 Claude·ChatGPT·Codex에 각자 설치할 수 있습니다. 스킬 원본은 하나(`plugins/thefrom-ux/skills/thefrom-ux/`)이고, 매니페스트만 도구별로 둡니다.
+
+| 도구 | 읽는 파일 | 설치 | 업데이트 |
+|---|---|---|---|
+| Claude (Cowork·Code) | `.claude-plugin/marketplace.json` → `plugins/thefrom-ux/.claude-plugin/plugin.json` | 마켓플레이스 추가 → 설치 | 자동 동기화 |
+| ChatGPT (업무용 워크스페이스) | `.agents/plugins/marketplace.json` → `plugins/thefrom-ux/plugin.json` | 관리자가 GitHub 마켓플레이스 가져오기 | 매일 자동 동기화 |
+| Codex | 위와 같음 | `codex plugin marketplace add` | `codex plugin marketplace upgrade` |
+| Gemini · 개인 GPT · 기타 | `portable/` | 지침 + 지식 파일 업로드 | 수동 |
 
 ## 설치 — 직원용
 
@@ -161,8 +168,22 @@ flowchart LR
 비공개 저장소라면 먼저 `gh auth login` → `gh auth setup-git`으로 GitHub 인증을 저장해 두세요.
 자동 업데이트는 `/plugin` → Marketplaces → thefrom → **Enable auto-update**.
 
-### ChatGPT · Gemini 등 다른 AI에서
-[`portable/README.md`](portable/README.md) — 지침 한 장(`portable/instructions.md`)과 지식 파일 8개(`portable/knowledge/`)로 맞춤 GPT·Gem을 만드는 방법.
+### ChatGPT — 플러그인 (업무용 워크스페이스, 관리자 1회)
+1. 워크스페이스 관리자가 플러그인 관리에서 **GitHub 마켓플레이스 가져오기** → `https://github.com/FROM-i/thefrom_design_Skill`
+2. ChatGPT가 `.agents/plugins/marketplace.json`을 읽어 **THE FROM** 마켓플레이스와 **thefrom-ux** 플러그인을 등록합니다. 이후 **매일 자동 동기화**됩니다.
+3. 직원은 ChatGPT **플러그인 디렉터리 → THE FROM → thefrom-ux → 설치**. 앱 연결이 없는 스킬 전용 플러그인이라 별도 인증은 없습니다.
+
+메뉴 이름은 OpenAI 화면 개편에 따라 바뀔 수 있습니다. 플랜·역할에 따라 플러그인 사용이 제한될 수 있습니다.
+
+### Codex
+```
+codex plugin marketplace add FROM-i/thefrom_design_Skill
+codex plugin add thefrom-ux@thefrom
+```
+업데이트는 `codex plugin marketplace upgrade`. Codex에서는 `scripts/shoot.py`로 화면 캡처 루프까지 돕니다(Playwright 필요).
+
+### Gemini · 개인 ChatGPT(맞춤 GPT) · 기타 AI
+플러그인을 쓸 수 없는 환경은 [`portable/README.md`](portable/README.md) — 지침 한 장(`portable/instructions.md`)과 지식 파일 8개(`portable/knowledge/`)로 Gem·맞춤 GPT를 만듭니다. 자동 업데이트는 되지 않습니다.
 
 ### 쓰는 법 — 브리프가 먼저입니다
 **"더프롬처럼 만들어줘"로는 시작되지 않습니다.** 이 스킬은 감각을 흉내 내지 않고 판단을 계산하며, 판단의 재료는 브리프입니다.
@@ -185,8 +206,9 @@ method/                      방법론 원본 — 여기만 고친다
   2_CATALOG_기성의_관점.md    L2 사조·조형 어휘·UI 패턴
   3_QNA_질문노드.md           L1 부속 질문 노드
 plugins/thefrom-ux/
-  .claude-plugin/plugin.json  버전
-  skills/thefrom-ux/
+  plugin.json                 범용 매니페스트 (ChatGPT·Codex, Agent Plugins 1.0.0)
+  .claude-plugin/plugin.json  Claude 매니페스트 — 두 파일의 version은 항상 같게
+  skills/thefrom-ux/          스킬 원본 하나 — 모든 도구가 같이 쓴다
     SKILL.md                  실행기 (직접 작성)
     references/               method/에서 자동 생성 — 직접 고치지 않는다
     assets/proto-base.html    375px 프로토타입 베이스
@@ -194,17 +216,22 @@ scripts/build_references.py  method/ → references/ · portable/knowledge/ 빌�
 portable/                    다른 AI용 지침과 지식 파일
 tools/brief-editor.html      브리프 편집기 — 브라우저로 열어 쓰고 .md 저장
 briefs/                      팀 브리프 보관
-.claude-plugin/marketplace.json
+.claude-plugin/marketplace.json   Claude 마켓플레이스
+.agents/plugins/marketplace.json  ChatGPT·Codex 마켓플레이스
 ```
 
 ## 방법론을 고칠 때 — 관리자용
 
 1. `method/`의 문서를 고친다. L0는 합의를 거치고 개정 이력을 남긴다.
 2. `python3 scripts/build_references.py` 로 스킬 참조본을 다시 만든다.
-3. `plugins/thefrom-ux/.claude-plugin/plugin.json`의 `version`을 올린다. **버전을 올리지 않으면 직원들에게 반영되지 않는다.**
+3. `plugins/thefrom-ux/plugin.json`과 `plugins/thefrom-ux/.claude-plugin/plugin.json`의 `version`을 **함께** 올린다. **버전을 올리지 않으면 직원들에게 반영되지 않는다.** `--check`가 두 버전이 다르면 실패한다.
 4. 커밋·푸시. `ci/check-references.yml`을 `.github/workflows/`로 옮겨 두면 GitHub Actions가 `references/`와 `method/`가 어긋났는지 검사한다. (워크플로 파일은 `workflow` 권한이 있는 계정으로 한 번만 올리면 된다.)
 
 SKILL.md를 고칠 때도 3번(버전)을 잊지 않는다.
 
-## 조직 배포 (Team·Enterprise 플랜)
-관리자가 claude.ai **Organization settings → Plugins & skills**에서 이 저장소를 연결하면, 직원 개인의 GitHub 계정 없이 전원에게 배포하거나 필수 설치로 지정할 수 있습니다. 이때 저장소는 비공개여야 합니다.
+스킬 문서(SKILL.md·references)에는 특정 AI 이름을 쓰지 않는다 — 여러 AI에서 같은 스킬이 돌기 때문이다. `method/` 원본의 "Claude"는 빌드 때 참조본에서 "AI"로 바뀐다(개정 이력 표는 그대로).
+
+## 조직 배포
+**Claude (Team·Enterprise)** — 관리자가 claude.ai **Organization settings → Plugins & skills**에서 이 저장소를 연결하면, 직원 개인의 GitHub 계정 없이 전원에게 배포하거나 필수 설치로 지정할 수 있습니다. 이때 저장소는 비공개여야 합니다.
+
+**ChatGPT (업무용 워크스페이스)** — 관리자가 이 저장소를 플러그인 마켓플레이스로 가져오면 매일 동기화됩니다. 공개·비공개 저장소 모두 됩니다.

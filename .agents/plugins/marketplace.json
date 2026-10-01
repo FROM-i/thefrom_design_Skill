@@ -1,0 +1,20 @@
+{
+  "name": "thefrom",
+  "interface": {
+    "displayName": "THE FROM"
+  },
+  "plugins": [
+    {
+      "name": "thefrom-ux",
+      "source": {
+        "source": "local",
+        "path": "./plugins/thefrom-ux"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Design"
+    }
+  ]
+}

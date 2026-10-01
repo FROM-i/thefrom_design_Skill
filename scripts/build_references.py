@@ -32,8 +32,15 @@ def toc(body):
     return "\n".join(out) + "\n\n---\n\n"
 
 
+def neutral(text):
+    """스킬은 Claude·ChatGPT·Codex 등 여러 AI에서 돈다 — 참조본에서는 특정 모델 이름을 'AI'로 바꾼다.
+    원본 method/ 는 그대로 두고, 개정 이력 표(| 2026…)는 기록이므로 바꾸지 않는다."""
+    return "\n".join(l if l.startswith("| 20") else l.replace("Claude", "AI")
+                     for l in text.split("\n"))
+
+
 def page(title, body, src):
-    return f"# {title}\n\n" + NOTE.format(src=src) + toc(body) + body
+    return f"# {title}\n\n" + NOTE.format(src=src) + toc(neutral(body)) + neutral(body)
 
 
 def build():
@@ -61,6 +68,21 @@ def portable(files):
     return out
 
 
+PLUGIN = ROOT / "plugins" / "thefrom-ux"
+MANIFESTS = [PLUGIN / "plugin.json", PLUGIN / ".claude-plugin" / "plugin.json"]
+
+
+def check_manifests():
+    """범용(plugin.json)과 Claude(.claude-plugin/plugin.json) 매니페스트의 이름·버전이 같은지 본다."""
+    import json
+    seen = {str(m.relative_to(ROOT)): json.loads(m.read_text(encoding="utf-8")) for m in MANIFESTS}
+    keys = {(d.get("name"), d.get("version")) for d in seen.values()}
+    if len(keys) != 1:
+        print("매니페스트 이름·버전이 어긋났습니다:", {k: (d.get("name"), d.get("version")) for k, d in seen.items()})
+        return False
+    return True
+
+
 def main():
     files = build()
     port = portable(files)
@@ -69,11 +91,14 @@ def main():
                  if not (DST / n).exists() or (DST / n).read_text(encoding="utf-8") != t]
         stale += ["portable/" + n for n, t in port.items()
                   if not (PORTABLE / n).exists() or (PORTABLE / n).read_text(encoding="utf-8") != t]
+        ok = check_manifests()
         if stale:
             print("references/ 가 method/ 와 어긋났습니다:", ", ".join(stale))
             print("python3 scripts/build_references.py 를 실행하고 커밋하세요.")
             sys.exit(1)
-        print("references/ 최신 상태입니다.")
+        if not ok:
+            sys.exit(1)
+        print("references/ 최신 상태입니다. 매니페스트 버전 일치.")
         return
     DST.mkdir(parents=True, exist_ok=True)
     for n, t in files.items():
@@ -83,7 +108,7 @@ def main():
     for n, t in port.items():
         (PORTABLE / n).write_text(t, encoding="utf-8")
     print(f"  portable/knowledge/ {len(port)}개")
-    print("완료. 방법론을 바꿨다면 plugin.json 의 version 을 올리세요.")
+    print("완료. 방법론을 바꿨다면 plugin.json 두 곳(plugin.json, .claude-plugin/plugin.json)의 version 을 함께 올리세요.")
 
 
 if __name__ == "__main__":
