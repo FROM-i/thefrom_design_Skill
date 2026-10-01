@@ -1,5 +1,8 @@
+
 # THE FROM_DESIGN_SKILL
 더프롬 철학을 기반으로 한 UI/UX 디자인 스킬
+
+<video src="https://github.com/user-attachments/assets/0b0099da-4e9b-4227-a976-1ed1b8b46549" width="600" controls></video>
 
 > **익숙한데, 처음 보는 것 같은 화면.**
 > 더프롬의 디자인 철학을, **사조(관성과 예술성)**와 **Knowhow Book(스킬과 테크닉)**이라는 두 재료로, **에어플레인 이펙트**와 **터널 이펙트**라는 두 방법론에 태워, **익숙함의 새로움 — 자메뷰(jamais vu)**를 만들어 내는 UX/UI 스킬입니다.
